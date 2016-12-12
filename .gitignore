@@ -10,3 +10,8 @@
 
 
 *.ipynb_checkpoints
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
