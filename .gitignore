@@ -7,3 +7,6 @@
 *.log
 *.pdf
 *.synctex.gz
+
+
+*.ipynb_checkpoints
