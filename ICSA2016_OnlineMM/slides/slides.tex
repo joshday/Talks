@@ -63,7 +63,7 @@
 %====================================================================================
 %=======================================================================   TITLE PAGE
 %====================================================================================
-\title[Online MM]{MM Concepts in Online Learning}
+\title[Online MM]{Online MM Algorithms for Machine Learning}
 \author{Josh Day}
 \institute[NC State University]{NC State University \\ \textit{jtday2@ncsu.edu}}
 \date{\today}
@@ -99,10 +99,8 @@
 %------------------------------------------------ What is MM
 \subsection{MM Algorithms}
 \begin{frame}
-  \frametitle{What is an MM Algorithm?}
+  \frametitle{What is a Majorization Minimization Algorithm?}
   \begin{itemize}
-    \item MM stands for \emph{Majorization-Minimization}
-    \item Solve several easy problems vs. one hard problem
     \item $h$ is said to \emph{majorize}  $f$ at $\iter{\bm\theta}{t}$ if:
     $$\begin{aligned}
       h(\bm\theta|\iter{\bm\theta}{t}) &\ge f(\bm\theta|\iter{\bm\theta}{t}) \\
@@ -117,11 +115,11 @@
   \end{figure}
 \end{frame}
 \begin{frame}
-  \frametitle{Online Algorithms}
+  \frametitle{What is an Online Algorithm?}
   Velocity can be handled by \emph{online algorithms}
   \begin{itemize}
-    \item Entire dataset is not available at once
     \item Input enters piece by piece
+    \item Entire dataset is not available at once
     \item A well known example: Stochastic Gradient Descent
     $$\iter{\bm\theta}{t} = \iter{\bm\theta}{t-1} - \gamma_t \nabla f_t(\iter{\bm\theta}{t-1})$$
   \end{itemize}
@@ -199,8 +197,8 @@
 \end{frame}
 \begin{frame}
   \begin{itemize}
-    \item Algorithms differ at step 3
-    \item Ex: For SGD, $Q_t(\bm\theta) = h_t(\bm\theta)$, with conditions that $h_t$ is $m_t$-strongly convex (quadratic lower bound) and $m_t\rightarrow\infty$
+    \item Algorithms differ at steps 2 (the majorization) and 3 (how $Q_t$ is updated)
+    \item Ex: For SGD, step 3 is $Q_t(\bm\theta) = h_t(\bm\theta)$, with conditions that $h_t$ is $m_t$-strongly convex (quadratic lower bound) and $m_t\rightarrow\infty$
   \end{itemize}
 \end{frame}
 
@@ -240,7 +238,7 @@
   \end{figure}
 \end{frame}
 
-\subsection{Quantile Regression Regression}
+\subsection{Quantile Regression}
 \begin{frame}
   \begin{itemize}
     \item Learning Rate: $\gamma_t = t^{-r}, r\in[.5, .7, .9]$
@@ -250,10 +248,13 @@
   \end{figure}
 \end{frame}
 
+
+
 \subsection{Thanks}
 \begin{frame}
   \frametitle{Thank You}
   \begin{itemize}
+    \item Software available: OnlineStats.jl and OnlineStatsModels.jl
     \item Questions?
   \end{itemize}
 \end{frame}
