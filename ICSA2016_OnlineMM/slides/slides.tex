@@ -283,13 +283,20 @@
   \frametitle{Applying regularization}
   For machine learning problems
     $$\frac{1}{n}\sum f_i(\bm\theta) + g(\bm\theta),$$
-    MMQD element-wise updates simplify to
+    the MMQD element-wise updates simplify to
     $$\iter{\theta_j}{t} = \mathbf{prox}_{h_{jj}^{-1}g}\left(\frac{b_{tj}}{h_{jj}}\right)$$
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Simulations
 \section{Simulation}
 \subsection{Linear Regression}
+\begin{frame}
+  \begin{itemize}
+    \item The following plots display the average loss of various online algorithms (using several different learning rates) relative to the offline solution for 1000 replications of simulated data.
+    \item Solid line: median relative loss
+    \item Ribbons: 0.05 and 0.95 quantiles
+  \end{itemize}
+\end{frame}
 \begin{frame}
   \begin{itemize}
     \item Learning Rate: $\gamma_t = t^{-r}, r\in[.5, .7, .9]$
@@ -302,85 +309,19 @@
 \subsection{Thanks}
 \begin{frame}
   \frametitle{Thank You}
+  \begin{figure}
+    \includegraphics[width=.2\textwidth]{figures/julia.png}
+  \end{figure}
   \begin{itemize}
-    \item Software available: OnlineStats.jl and OnlineStatsModels.jl
+    \item Software available:
+    \begin{itemize}
+      \item OnlineStats.jl
+      \item OnlineStatsModels.jl
+    \end{itemize}
     \item Questions?
   \end{itemize}
 \end{frame}
 
-
-% %------------------------------------------------
-%
-% \begin{frame}
-% \frametitle{Blocks of Highlighted Text}
-% \begin{block}{Block 1}
-% Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lectus nisl, ultricies in feugiat rutrum, porttitor sit amet augue. Aliquam ut tortor mauris. Sed volutpat ante purus, quis accumsan dolor.
-% \end{block}
-%
-% \begin{block}{Block 2}
-% Pellentesque sed tellus purus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Vestibulum quis magna at risus dictum tempor eu vitae velit.
-% \end{block}
-%
-% \begin{block}{Block 3}
-% Suspendisse tincidunt sagittis gravida. Curabitur condimentum, enim sed venenatis rutrum, ipsum neque consectetur orci, sed blandit justo nisi ac lacus.
-% \end{block}
-% \end{frame}
-%
-% %------------------------------------------------
-%
-% \begin{frame}
-% \frametitle{Multiple Columns}
-% \begin{columns}[c] % The "c" option specifies centered vertical alignment while the "t" option is used for top vertical alignment
-%
-% \column{.45\textwidth} % Left column and width
-% \textbf{Heading}
-% \begin{enumerate}
-% \item Statement
-% \item Explanation
-% \item Example
-% \end{enumerate}
-%
-% \column{.5\textwidth} % Right column and width
-% Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lectus nisl, ultricies in feugiat rutrum, porttitor sit amet augue. Aliquam ut tortor mauris. Sed volutpat ante purus, quis accumsan dolor.
-%
-% \end{columns}
-% \end{frame}
-%
-%
-%
-% \begin{frame}
-% \frametitle{Table}
-% \begin{table}
-% \begin{tabular}{l l l}
-% \toprule
-% \textbf{Treatments} & \textbf{Response 1} & \textbf{Response 2}\\
-% \midrule
-% Treatment 1 & 0.0003262 & 0.562 \\
-% Treatment 2 & 0.0015681 & 0.910 \\
-% Treatment 3 & 0.0009271 & 0.296 \\
-% \bottomrule
-% \end{tabular}
-% \caption{Table caption}
-% \end{table}
-% \end{frame}
-
-
-
-
-
-
-%------------------------------------------------
-
-% \begin{frame}
-% \frametitle{References}
-% \footnotesize{
-% \begin{thebibliography}{99} % Beamer does not support BibTeX so references must be inserted manually as below
-% \bibitem[Smith, 2012]{p1} John Smith (2012)
-% \newblock Title of the publication
-% \newblock \emph{Journal Name} 12(3), 45 -- 678.
-% \end{thebibliography}
-% }
-% \end{frame}
 
 
 
