@@ -54,6 +54,8 @@
 \usepackage{bm}
 \usepackage[lined,boxed]{algorithm2e}
 \usepackage{hyperref}
+\usepackage{pifont}
+
 
 \newcommand{\iter}[2]{#1^{(#2)}}
 \DeclareMathOperator*{\argmin}{arg\,min}
@@ -164,9 +166,6 @@
   Suppose $f_t(\bm\theta)$ has $L_t$-Lipschitz continuous gradient
   \begin{itemize}
     \item SGD updates are MM updates anytime $\gamma_t^{-1} \le L_t$
-    \begin{figure}
-      \includegraphics[width=.7\textwidth]{figures/quadraticupperbound.png}
-    \end{figure}
   \end{itemize}
 \end{frame}
 \begin{frame}
@@ -198,7 +197,11 @@
 \begin{frame}
   \begin{itemize}
     \item Algorithms differ at steps 2 (the majorization) and 3 (how $Q_t$ is updated)
-    \item Ex: For SGD, step 3 is $Q_t(\bm\theta) = h_t(\bm\theta)$, with conditions that $h_t$ is $m_t$-strongly convex (quadratic lower bound) and $m_t\rightarrow\infty$
+    \item Ex: SGD
+    \begin{itemize}
+      \item[-] $h_t=$ quadratic upper bound ($m_t$-strongly convex, $m_t\rightarrow\infty$)
+      \item[-] $Q_t(\bm\theta) = h_t(\bm\theta)$
+    \end{itemize}
   \end{itemize}
 \end{frame}
 
@@ -208,6 +211,7 @@
   \begin{itemize}
     \item Rare case when there exists ``sufficient statistics'' for majorizing $\frac{1}{t}\sum_{\tau=1}^t f_\tau(\bm\theta)$ analytically
     \item Online majorization = offline majorization
+    \item However, to get same estimate as offline algorithm, we need multiple iterations per update
   \end{itemize}
 \end{frame}
 \begin{frame}
@@ -222,9 +226,66 @@
   \begin{itemize}
     \item $Q_t(\bm\theta) = h_t(\bm\theta)$, $h_t$ is $m_t$ strongly convex, $m_t\rightarrow\infty$
     \item SGD-like algorithms (ADAGRAD, ADAM)
+    \item Are there non-SGD algorithms?
   \end{itemize}
 \end{frame}
 
+
+\subsection{Translating Offline to Online}
+\begin{frame}
+  \frametitle{Which types can you use?}
+  \begin{figure}
+    \begin{itemize}
+      \item Type 1? Only if majorization depends on O(1) sufficient statistics
+      \item Type 2? Always
+      \item Type 3? Only if majorization can get worse as $t\rightarrow\infty$
+    \end{itemize}
+  \end{figure}
+\end{frame}
+\begin{frame}
+  \frametitle{Can you Make a Majorization "Worse"?}
+  \begin{itemize}
+    \item[\ding{51}] Quadratic upper bound
+      $$h_t(\bm\theta) = f_t(\bm u) + \nabla f_t(\bm u)^T(\bm\theta - \bm u) + \frac{L}{2\gamma_t}\|\bm\theta - \bm u\|_2^2$$
+    \item[\ding{55}] Definition of convexity with linear predictor
+      $$h_t(\bm x_t^T\bm\beta) = \sum_j \alpha_{tj} f_t\left[\frac{x_{tj}}{\alpha_{tj}}(\beta_j - \iter{\beta_j}{t-1}) + \bm x_t^T\iter{\bm\beta}{t-1}\right]$$
+  \end{itemize}
+\end{frame}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MMQD
+\section{MMQD}
+
+\subsection{Type 2: MMQD}
+\begin{frame}
+  Online \textbf{MM} with \textbf{Q}uadratic upper bound using a \textbf{D}iagonal Hessian approximation
+\end{frame}
+\begin{frame}
+  \begin{itemize}
+    \item If $\bm H - d^2 f(\bm\theta)$ is nonnegative definite, then
+    $$h(\bm\theta) = f(\bm u) + \nabla f(\bm u)^T(\bm\theta - \bm u) + \frac{1}{2}(\bm\theta - \bm u)\bm H(\bm\theta - \bm u)$$
+    is a majorizing function
+    \item However, parameters only split if $\bm H$ is diagonal
+  \end{itemize}
+\end{frame}
+\begin{frame}
+  \begin{itemize}
+    \item Online MM with Quadratic Upper Bound is
+    $$\iter{\bm\theta}{t} = \bm A_t^{-1}\bm b_t,$$
+    where
+    $$\begin{aligned}
+      \bm A_t &= (1 - \gamma_t)\bm A_{t-1} + \gamma_t \bm H_t \\
+      \bm b_t &= (1 - \gamma_t)\bm b_{t-1} + \gamma_t[\bm H_t\iter{\bm\theta}{t-1} - \nabla f_t(\iter{\bm\theta}{t-1})]
+      \end{aligned}$$
+  \end{itemize}
+\end{frame}
+\begin{frame}
+  \frametitle{Applying regularization}
+  For machine learning problems
+    $$\frac{1}{n}\sum f_i(\bm\theta) + g(\bm\theta),$$
+    MMQD element-wise updates simplify to
+    $$\iter{\theta_j}{t} = \mathbf{prox}_{h_{jj}^{-1}g}\left(\frac{b_{tj}}{h_{jj}}\right)$$
+\end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Simulations
 \section{Simulation}
@@ -237,18 +298,6 @@
     \includegraphics[width=\textwidth]{figures/linregmm_simulation.pdf}
   \end{figure}
 \end{frame}
-
-\subsection{Quantile Regression}
-\begin{frame}
-  \begin{itemize}
-    \item Learning Rate: $\gamma_t = t^{-r}, r\in[.5, .7, .9]$
-  \end{itemize}
-  \begin{figure}
-    \includegraphics[width=\textwidth]{figures/quantreg_simulation.pdf}
-  \end{figure}
-\end{frame}
-
-
 
 \subsection{Thanks}
 \begin{frame}
