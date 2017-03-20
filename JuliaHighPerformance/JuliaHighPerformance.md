@@ -54,6 +54,10 @@ end
 ## JIT
 - live example with `@code_llvm` macro
 
+```julia
+f(x) = x ^ 2
+```
+
 ---
 # Julia Basics
 ## For loops
@@ -145,6 +149,7 @@ end
 ```
 
 ---
+Input:
 ```julia
 for d in [Normal(), Gamma(5,1), TDist(4)]
     println("For $d")
@@ -153,7 +158,8 @@ for d in [Normal(), Gamma(5,1), TDist(4)]
     println()
 end
 ```
-```
+Output:
+```julia
 For Distributions.Normal{Float64}(μ=0.0, σ=1.0)
   > myquantile: -0.2533471031356957
   > quantile:   -0.2533471031357997
@@ -216,11 +222,11 @@ R"rnorm(5)"
 ---
 # Macros
 - Macros are functions of expressions
-- They change an expression before it is run
+- They change an expression before it is run, and can therefore do many things!
 ```julia
 x = randn(1000);
 
-@time sum(x)  # precompilation at work
+@time sum(x)  # JIT at work
 #   0.031018 seconds (12.86 k allocations: 602.013 KB)
 # -34.195601715147035
 
@@ -230,4 +236,102 @@ x = randn(1000);
 ```
 
 ---
-# Macros
+# Macros (turn off bounds checking)
+```julia
+x = rand(1000)
+
+for i in eachindex(x)
+    @inbounds x[i] *= 5.0
+end
+```
+
+--- 
+# Macros (benchmarking)
+```julia
+using BenchmarkTools
+@benchmark sum(x)
+```
+```
+BenchmarkTools.Trial:
+  memory estimate:  16 bytes
+  allocs estimate:  1
+  --------------
+  minimum time:     223.916 ns (0.00% GC)
+  median time:      231.385 ns (0.00% GC)
+  mean time:        237.263 ns (0.86% GC)
+  maximum time:     7.247 μs (95.52% GC)
+  --------------
+  samples:          10000
+  evals/sample:     455
+  time tolerance:   5.00%
+  memory tolerance: 1.00%
+```
+
+---
+# Macros (Other)
+```julia
+@which sum(x)  # find the method being called
+
+@edit sum(x)   # open file where the method is
+```
+
+---
+# Working with Data
+
+---
+# StatsBase
+
+Much of the functionality built into R
+
+```julia
+using StatsBase
+
+sample(1:5, 5, replace = false)
+```
+
+---
+# DataFrames and DataTables
+- Both for working with tabular data
+- DataTables is a fork of DataFrames
+  - Behind the scenes containers are different 
+    - `DataArray` vs. `NullableArray`
+
+---
+# DataTables
+Input:
+```julia
+iris = readtable(joinpath(Pkg.dir("DataTables"), "test/data/iris.csv"))
+head(iris)
+```
+Ouput:
+```
+6×5 DataTables.DataTable
+│ Row │ SepalLength │ SepalWidth │ PetalLength │ PetalWidth │ Species │
+├─────┼─────────────┼────────────┼─────────────┼────────────┼─────────┤
+│ 1   │ 5.1         │ 3.5        │ 1.4         │ 0.2        │ setosa  │
+│ 2   │ 4.9         │ 3.0        │ 1.4         │ 0.2        │ setosa  │
+│ 3   │ 4.7         │ 3.2        │ 1.3         │ 0.2        │ setosa  │
+│ 4   │ 4.6         │ 3.1        │ 1.5         │ 0.2        │ setosa  │
+│ 5   │ 5.0         │ 3.6        │ 1.4         │ 0.2        │ setosa  │
+│ 6   │ 5.4         │ 3.9        │ 1.7         │ 0.4        │ setosa  │
+```
+
+---
+# Query (query almost any data source)
+```julia
+using Query
+
+x = @from i in iris begin
+    @where i.Species == "setosa" && i.PetalLength > 1.7
+    @select i
+    @collect DataTable
+end
+```
+
+```
+2×5 DataTables.DataTable
+│ Row │ SepalLength │ SepalWidth │ PetalLength │ PetalWidth │ Species │
+├─────┼─────────────┼────────────┼─────────────┼────────────┼─────────┤
+│ 1   │ 4.8         │ 3.4        │ 1.9         │ 0.2        │ setosa  │
+│ 2   │ 5.1         │ 3.8        │ 1.9         │ 0.4        │ setosa  │
+```
