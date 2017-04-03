@@ -231,17 +231,31 @@ methods(*)
 # Abstraction
 - Consider these three function definitions:
 ```julia
-# Too broad?  Not everything can be added
-f(x) = x + x
+f(x) = x + x  # too broad?
 
 
-# Too specific?  Numbers besides Float64 can be added
-g(x::Float64) = x + x
+g(x::Float64) = x + x  # too specific?
 
 
-# Just right:  Every number has a `+` method, so this 
-# works on the entire type tree in the previous slide
+h(x::Number) = x + x  # just right
+```
+
+---
+# Type Annotations
+Mainly useful for error handling
+- Compare this:
+```julia
 h(x::Number) = x + x
+```
+- to this:
+```julia
+function h(x)
+    if isa(x, Number)
+        return x + x
+    else
+        throw(ArgumentError("x should be a number"))
+    end
+end
 ```
 
 
@@ -345,7 +359,7 @@ Output:
 ---
 # Adding methods for existing functions
 ```julia
-Base.:+(o::MyType, o2::MyType) = o.a + o2.a
+Base.:+(o1::MyType, o2::MyType) = MyType(o1.a + o2.a)
 
 MyType(1) + MyType(8)
 ```
@@ -404,6 +418,23 @@ gif(anim, "/Users/joshday/Desktop/my_animation.gif")
 INFO: Saved animation to /Users/joshday/Desktop/my_animation.gif
 ```
 
+---
+# `push!` values to a series
+- Input:
+```julia
+x = randn()
+
+p = plot([x])
+
+for i in 1:100
+    x += randn()
+    push!(p, x)
+end
+```
+---
+- Ouput: 
+![inline](push.png)
+
 
 ---
 # Calling R from Julia
@@ -435,7 +466,7 @@ Output:
 ---
 # Statistics, Working with Data, Machine Learning, etc.
 
-- StatsBase, GLM, DataFrames, Query, MixedModels, Distributions, KernelDensity, OnlineStats, LossFunctions, 
+- StatsBase, GLM, DataFrames, Query, MixedModels, Distributions, KernelDensity, LossFunctions...
 
 ---
 # StatsBase
@@ -499,6 +530,8 @@ end
 ---
 # JuMP
 ```julia
+using JuMP, Ipopt
+
 n = 1000
 data = randn(n)
 
@@ -512,21 +545,6 @@ println("μ = ", getvalue(μ))
 println("σ = ", getvalue(σ))
 ```
 
----
-# JuMP
-# LASSO
-```julia
-b = rand(5)
-x = randn(100, 5)
-y = x*b + randn(100)
-λ = .01
-
-
-m = Model(solver = MosekSolver())
-@variable(m, β[1:5])
-@NLobjective(m, Min, (y - x*β)[i] ^2 for i in 1:100)
-solve(m)
-```
 
 ---
 # Macros
