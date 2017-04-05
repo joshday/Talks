@@ -403,9 +403,6 @@ INFO: Saved animation to /Users/joshday/Desktop/my_animation.gif
 ```
 
 ---
-![](tmp.gif)
-
----
 # `push!` values to a series
 - Input:
 ```julia
