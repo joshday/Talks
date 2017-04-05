@@ -36,7 +36,6 @@ end
 ---
 # Before We Get To Julia
 ## Sapir-Worf Hypothesis
-
 - Your language determines/influences how you think
 
 
@@ -76,18 +75,7 @@ end
 - https://github.com/dmbates/MixedModels.jl
 
 ---
-# Language features of R, Matlab and Julia
-
-|        Features       |             R            |     Matlab     |        Julia        |
-|:---------------------:|:------------------------:|:--------------:|:-------------------:|
-|      Open source      |           👍         |      👎      |         👍        |
-|    Multi-threading    |    `parallel` 👎  |      👍      |  👍 👍 [see docs](http://docs.julialang.org/en/release-0.4/manual/parallel-computing/)  |
-|          JIT          |    `compiler` 👎  |    👍 👍   |    👍 👍 👍   |
-|         Typing        |           👎           |    👍 👍   |    👍 👍 👍   |
-|   Pass by ref   |           👎           |      👎      |    👍 👍 👍   |
-|     Linear algebra    |           👎           |   MKL, Arpack  |  OpenBLAS, eigpack  |
-| Distrib. comp. |           👎           |      👍      |    👍 👍 👍   |
-|        Profiler       |           👎           | 👍 👍 👍 |    👍 👍 👍   |
+![inline](features.png)
 
 
 ---
@@ -119,7 +107,7 @@ end
 # Julia Basics
 ## Everything has a type
 ```julia
-1    # typeof(1) == Int64
+1    # Int64
 
 1.0  # Float64
 
@@ -132,9 +120,9 @@ end
 - Julia's main focus is numerical computing, so creators wanted code to look similar to mathematical formulas:
   $$\hat\beta = (X^TX)^{-1}X^Ty$$
 ```julia
-β̂ = inv(x'x)x'y  # Implicit multiplication
+Î˛Ě = inv(x'x)x'y  # Implicit multiplication
 
-β̂ = inv(x' * x) * x' * y  
+Î˛Ě = inv(x' * x) * x' * y  
 ```
 - Compare this to R:
 ```r
@@ -291,14 +279,14 @@ $$\theta_{t+1} = \theta_t - \frac{F(\theta_t) - q}{F'(\theta_t)}$$
 using Distributions
 
 function myquantile(d::UnivariateDistribution, q::Number)
-    θ = mean(d)
+    Î¸ = mean(d)
     tol = Inf
     while tol > 1e-5
-        θold = θ
-        θ = θ - (cdf(d, θ) - q) / pdf(d, θ)
-        tol = abs(θold - θ)
+        Î¸old = Î¸
+        Î¸ = Î¸ - (cdf(d, Î¸) - q) / pdf(d, Î¸)
+        tol = abs(Î¸old - Î¸)
     end
-    θ
+    Î¸
 end
 ```
 
@@ -313,15 +301,15 @@ end
 ```
 Output:
 ```julia
-For Distributions.Normal{Float64}(μ=0.0, σ=1.0)
+For Distributions.Normal{Float64}(Îź=0.0, Ď=1.0)
   > myquantile: -0.2533471031356957
   > quantile:   -0.2533471031357997
 
-For Distributions.Gamma{Float64}(α=5.0, θ=1.0)
+For Distributions.Gamma{Float64}(Îą=5.0, Î¸=1.0)
   > myquantile: 4.1477358804705435
   > quantile:   4.1477358804705435
 
-For Distributions.TDist{Float64}(ν=4.0)
+For Distributions.TDist{Float64}(Î˝=4.0)
   > myquantile: -0.27072229470638115
   > quantile:   -0.27072229470759746
 ```
@@ -466,7 +454,7 @@ Output:
 ---
 # Statistics, Working with Data, Machine Learning, etc.
 
-- StatsBase, GLM, DataFrames, Query, MixedModels, Distributions, KernelDensity, LossFunctions...
+- StatsBase, GLM, DataFrames, Query, MixedModels, Distributions, KernelDensity, LossFunctions, ...
 
 ---
 # StatsBase
@@ -496,15 +484,15 @@ head(iris)
 ```
 Ouput:
 ```
-6×5 DataTables.DataTable
-│ Row │ SepalLength │ SepalWidth │ PetalLength │ PetalWidth │ Species │
-├─────┼─────────────┼────────────┼─────────────┼────────────┼─────────┤
-│ 1   │ 5.1         │ 3.5        │ 1.4         │ 0.2        │ setosa  │
-│ 2   │ 4.9         │ 3.0        │ 1.4         │ 0.2        │ setosa  │
-│ 3   │ 4.7         │ 3.2        │ 1.3         │ 0.2        │ setosa  │
-│ 4   │ 4.6         │ 3.1        │ 1.5         │ 0.2        │ setosa  │
-│ 5   │ 5.0         │ 3.6        │ 1.4         │ 0.2        │ setosa  │
-│ 6   │ 5.4         │ 3.9        │ 1.7         │ 0.4        │ setosa  │
+6Ă5 DataTables.DataTable
+â Row â SepalLength â SepalWidth â PetalLength â PetalWidth â Species â
+âââââââźââââââââââââââźâââââââââââââźââââââââââââââźâââââââââââââźââââââââââ¤
+â 1   â 5.1         â 3.5        â 1.4         â 0.2        â setosa  â
+â 2   â 4.9         â 3.0        â 1.4         â 0.2        â setosa  â
+â 3   â 4.7         â 3.2        â 1.3         â 0.2        â setosa  â
+â 4   â 4.6         â 3.1        â 1.5         â 0.2        â setosa  â
+â 5   â 5.0         â 3.6        â 1.4         â 0.2        â setosa  â
+â 6   â 5.4         â 3.9        â 1.7         â 0.4        â setosa  â
 ```
 
 ---
@@ -520,11 +508,11 @@ end
 ```
 
 ```
-2×5 DataTables.DataTable
-│ Row │ SepalLength │ SepalWidth │ PetalLength │ PetalWidth │ Species │
-├─────┼─────────────┼────────────┼─────────────┼────────────┼─────────┤
-│ 1   │ 4.8         │ 3.4        │ 1.9         │ 0.2        │ setosa  │
-│ 2   │ 5.1         │ 3.8        │ 1.9         │ 0.4        │ setosa  │
+2Ă5 DataTables.DataTable
+â Row â SepalLength â SepalWidth â PetalLength â PetalWidth â Species â
+âââââââźââââââââââââââźâââââââââââââźââââââââââââââźâââââââââââââźââââââââââ¤
+â 1   â 4.8         â 3.4        â 1.9         â 0.2        â setosa  â
+â 2   â 5.1         â 3.8        â 1.9         â 0.4        â setosa  â
 ```
 
 ---
@@ -536,13 +524,13 @@ n = 1000
 data = randn(n)
 
 m = Model(solver = IpoptSolver())
-@variable(m, μ, start = 0.0)
-@variable(m, σ >= 0.0, start = 1.0)
-@NLobjective(m, Max, (n/2)*log(1/(2π*σ^2))-sum((data[i]-μ)^2 for i=1:n)/(2σ^2))
+@variable(m, Îź, start = 0.0)
+@variable(m, Ď >= 0.0, start = 1.0)
+@NLobjective(m, Max, (n/2)*log(1/(2Ď*Ď^2))-sum((data[i]-Îź)^2 for i=1:n)/(2Ď^2))
 solve(m)
 
-println("μ = ", getvalue(μ))
-println("σ = ", getvalue(σ))
+println("Îź = ", getvalue(Îź))
+println("Ď = ", getvalue(Ď))
 ```
 
 
@@ -589,7 +577,7 @@ BenchmarkTools.Trial:
   minimum time:     223.916 ns (0.00% GC)
   median time:      231.385 ns (0.00% GC)
   mean time:        237.263 ns (0.86% GC)
-  maximum time:     7.247 μs (95.52% GC)
+  maximum time:     7.247 Îźs (95.52% GC)
   --------------
   samples:          10000
   evals/sample:     455
