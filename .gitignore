@@ -15,3 +15,8 @@
 *.snm
 *.toc
 *.vrb
+
+*.csv
+*.gif
+*.svg
+*.png
