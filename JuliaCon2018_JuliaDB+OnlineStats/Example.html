@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" />
-<title>Examples</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>Example</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 
 <style type="text/css">
@@ -11818,7 +11818,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">files</span> <span class="o">=</span> <span class="n">glob</span><span class="p">(</span><span class="s">&quot;*.csv&quot;</span><span class="p">,</span> <span class="s">&quot;/Users/joshday/datasets/taxi/&quot;</span><span class="p">)[</span><span class="k">end</span><span class="o">-</span><span class="mi">10</span><span class="o">:</span><span class="k">end</span><span class="p">]</span>
+<div class=" highlight hl-julia"><pre><span></span><span class="n">files</span> <span class="o">=</span> <span class="n">glob</span><span class="p">(</span><span class="s">&quot;*.csv&quot;</span><span class="p">,</span> <span class="s">&quot;/Users/joshday/datasets/taxi/&quot;</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -11837,7 +11837,8 @@ div#notebook {
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>11-element Array{String,1}:
+<pre>12-element Array{String,1}:
+ &#34;/Users/joshday/datasets/taxi/yellow_tripdata_2017-01.csv&#34;
  &#34;/Users/joshday/datasets/taxi/yellow_tripdata_2017-02.csv&#34;
  &#34;/Users/joshday/datasets/taxi/yellow_tripdata_2017-03.csv&#34;
  &#34;/Users/joshday/datasets/taxi/yellow_tripdata_2017-04.csv&#34;
@@ -11861,7 +11862,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Load-dataset-larger-than-memory-(&lt;3-minutes)">Load dataset larger than memory (&lt;3 minutes)<a class="anchor-link" href="#Load-dataset-larger-than-memory-(&lt;3-minutes)">&#182;</a></h1>
+<h1 id="Load-dataset-larger-than-memory-(under-3-minutes)">Load dataset larger than memory (under 3 minutes)<a class="anchor-link" href="#Load-dataset-larger-than-memory-(under-3-minutes)">&#182;</a></h1>
 </div>
 </div>
 </div>
@@ -11889,7 +11890,7 @@ div#notebook {
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>Distributed Table with 103786750 rows in 11 chunks:
+<pre>Distributed Table with 113496874 rows in 12 chunks:
 Columns:
 <span class="ansi-bold">#   </span><span class="ansi-bold">colname                </span><span class="ansi-bold">type</span>
 ───────────────────────────────────
@@ -11921,7 +11922,7 @@ Columns:
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>147.683731 seconds (3.32 M allocations: 181.816 MiB, 0.17% gc time)
+<pre>152.603136 seconds (3.32 M allocations: 182.853 MiB, 0.25% gc time)
 </pre>
 </div>
 </div>
@@ -11934,7 +11935,7 @@ Columns:
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Kill-the-Kernel,-Restart-Julia,-Load-Table-from-Binary">Kill the Kernel, Restart Julia, Load Table from Binary<a class="anchor-link" href="#Kill-the-Kernel,-Restart-Julia,-Load-Table-from-Binary">&#182;</a></h1>
+<h1 id="Restart-Julia,-Load-Table-from-Binary">Restart Julia, Load Table from Binary<a class="anchor-link" href="#Restart-Julia,-Load-Table-from-Binary">&#182;</a></h1>
 </div>
 </div>
 </div>
@@ -11965,7 +11966,7 @@ Columns:
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>Distributed Table with 103786750 rows in 11 chunks:
+<pre>Distributed Table with 113496874 rows in 12 chunks:
 Columns:
 <span class="ansi-bold">#   </span><span class="ansi-bold">colname                </span><span class="ansi-bold">type</span>
 ───────────────────────────────────
@@ -11997,7 +11998,7 @@ Columns:
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>  0.314782 seconds (130.26 k allocations: 6.893 MiB)
+<pre>  0.320673 seconds (130.31 k allocations: 6.894 MiB)
 </pre>
 </div>
 </div>
@@ -12036,7 +12037,7 @@ Columns:
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre> 38.113225 seconds (1.78 M allocations: 98.364 MiB)
+<pre> 42.047238 seconds (1.78 M allocations: 96.567 MiB)
 </pre>
 </div>
 </div>
@@ -12052,16 +12053,16 @@ Columns:
 <pre>Distributed Table with 11 rows in 1 chunks:
 <span class="ansi-bold">passenger_count  </span>Mean
 ─────────────────────────────────────────────────
-0                Mean: n=165554 | value=13.3116
-1                Mean: n=74072569 | value=12.9409
-2                Mean: n=15143017 | value=13.7458
-3                Mean: n=4357927 | value=13.536
-4                Mean: n=2075625 | value=13.8076
-5                Mean: n=4922074 | value=13.0787
-6                Mean: n=3049058 | value=13.0415
-7                Mean: n=338 | value=43.7983
-8                Mean: n=317 | value=45.7156
-9                Mean: n=270 | value=54.5304
+0                Mean: n=166086 | value=13.3626
+1                Mean: n=81034106 | value=12.8784
+2                Mean: n=16545529 | value=13.657
+3                Mean: n=4748847 | value=13.5801
+4                Mean: n=2257808 | value=13.7136
+5                Mean: n=5407303 | value=13.012
+6                Mean: n=3336197 | value=12.9714
+7                Mean: n=360 | value=43.7429
+8                Mean: n=339 | value=45.4509
+9                Mean: n=298 | value=55.4761
 192              Mean: n=1 | value=6.5</pre>
 </div>
 
