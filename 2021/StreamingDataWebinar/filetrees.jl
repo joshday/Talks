@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.16.0
+# v0.16.1
 
 using Markdown
 using InteractiveUtils
@@ -13,6 +13,9 @@ macro bind(def, element)
     end
 end
 
+# ╔═╡ fc6da5b6-2c31-11ec-3513-33a8340f968b
+using FileTrees, DataFrames, OnlineStats, PlutoUI, CSV, Plots, OrderedCollections
+
 # ╔═╡ 24df3ac0-ddbf-464a-8e78-a8fd3c60bd9d
 # hack around https://github.com/fonsp/Pluto.jl/issues/300
 begin
@@ -25,9 +28,6 @@ begin
 		return esc(:(@everywhere workers() $ex; eval($(Expr(:quote, ex)))))
 	end
 end
-
-# ╔═╡ fc6da5b6-2c31-11ec-3513-33a8340f968b
-@everywhere using FileTrees, DataFrames, OnlineStats, PlutoUI, CSV, Plots, OrderedCollections
 
 # ╔═╡ 8f65b6a2-d9cc-4971-847f-04573c9fc10d
 PlutoUI.TableOfContents()
@@ -73,10 +73,10 @@ end
 subtree_map = mapvalues(df -> maximum(df.High), subtree_dfs)
 
 # ╔═╡ c6cbc789-8dda-45a3-bab5-f48357df5a35
-subtree_map_exec = exec(subtree_map)
+subtree_map_exec = subtree_map
 
 # ╔═╡ 1471c7a7-5b5a-41be-ab5b-c59f0dd7a29b
-get(subtree_map_exec["aapl.us.txt"])
+get(subtree_map_exec["nflx.us.txt"])
 
 # ╔═╡ de191215-f315-4150-93bc-767f3f55dc36
 md"## What is the Average Absolute Difference Between Low and High for all Stocks?"
@@ -93,7 +93,7 @@ end;
 stocks_lazy_reduce = reducevalues(merge, stock_dfs_lazy)
 
 # ╔═╡ d5109f9b-0cdd-4b39-ba6e-d8af7b408f5d
-stocks_lazy_reduce_exec = exec(stocks_lazy_reduce)
+stocks_lazy_reduce_exec = stocks_lazy_reduce
 
 # ╔═╡ 3266b87d-d5c1-400a-9d38-919954216063
 stocklist = ["aapl", "msft", "ibm", "googl", "nflx"];
@@ -1111,7 +1111,7 @@ version = "0.9.1+5"
 # ╠═f4a89b59-6bb7-40bf-8d48-7706f8605cf3
 # ╠═8202387e-1b1d-417a-a194-1f6fee5d7f19
 # ╟─0b3e7d59-6a20-49b5-b9a9-0e93e89631fc
-# ╟─5bd7d13a-a417-4c29-a7dd-ed67cb19722c
+# ╠═5bd7d13a-a417-4c29-a7dd-ed67cb19722c
 # ╠═e3406904-cbba-407a-90a9-c7d903fa970d
 # ╠═1af30a11-75f5-4e0d-9561-450f13254977
 # ╠═c6cbc789-8dda-45a3-bab5-f48357df5a35

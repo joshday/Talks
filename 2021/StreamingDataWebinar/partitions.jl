@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.16.0
+# v0.16.1
 
 using Markdown
 using InteractiveUtils
@@ -19,7 +19,7 @@ md"""
 
 ## `Partition`
 
-- `Partition` is for univariate data.
+- `Partition` visualizes a univariate data stream.
 - It works by calculating an `OnlineStat` over nearly equal-sized sections of data.
 - Similar to the visualizations created by R's [`tabplot`](https://mran.microsoft.com/snapshot/2015-11-17/web/packages/tabplot/vignettes/tabplot-vignette.html) package.
 """
@@ -30,13 +30,13 @@ let
 	
 	data = []
 	
-	@gif for i in 1:200
+	@gif for i in 1:300
 		y = i + 5randn()
 	    fit!(o, y)
 		plot(o)
 		
 		push!(data, y)
-		scatter!(data, lab="data", alpha=.5, color="black", ms=3, legend=:topleft)
+		scatter!(data, lab="data", color="black", ms=3, legend=:topleft)
 	end
 end
 
@@ -51,7 +51,7 @@ md"""
 
 # ╔═╡ bfd3639f-1cbf-4a7d-9bd7-7f2dbb7b268f
 let
-	o = IndexedPartition(Float64, Hist(-10:.5:10), 100)
+	o = IndexedPartition(Float64, KHist(20), 100)
 	
 	x = randn(10^6)
 	y = x + randn(10^6)

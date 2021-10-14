@@ -4,21 +4,21 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 03ef6aea-2c39-11ec-21ae-63d2bf5b660d
-# hack around https://github.com/fonsp/Pluto.jl/issues/300
-begin
-	macro everywhere(procs, ex)
-		return esc(:(Main.@everywhere $procs $ex))
-	end
-	workers() = filter(pid -> pid != Main.myid(), Main.workers())
-	macro everywhere(ex)
-		# have pluto handle evaluation on workspace process
-		return esc(:(@everywhere workers() $ex; eval($(Expr(:quote, ex)))))
-	end
-end
-
 # ╔═╡ e6a8655e-5ede-42e3-b90d-ed34db11e5a8
-@everywhere using FileTrees, DataFrames, OnlineStats, PlutoUI, CSV, Plots, Dates, ProgressMeter
+using FileTrees, DataFrames, OnlineStats, PlutoUI, CSV, Plots, Dates
+
+# ╔═╡ 03ef6aea-2c39-11ec-21ae-63d2bf5b660d
+# # hack around https://github.com/fonsp/Pluto.jl/issues/300
+# begin
+# 	macro everywhere(procs, ex)
+# 		return esc(:(Main.@everywhere $procs $ex))
+# 	end
+# 	workers() = filter(pid -> pid != Main.myid(), Main.workers())
+# 	macro everywhere(ex)
+# 		# have pluto handle evaluation on workspace process
+# 		return esc(:(@everywhere workers() $ex; eval($(Expr(:quote, ex)))))
+# 	end
+# end
 
 # ╔═╡ 3a9249d8-af18-4134-bfba-ddcdc14f28ed
 md"""
@@ -31,14 +31,14 @@ md"""
 """
 
 # ╔═╡ 514fd71b-2e4e-4524-bbfa-3b3e11fe665c
-path = "/Users/joshday/datasets/yellow_taxi_2019/"
+taxipath = "/Users/joshday/datasets/yellow_taxi_2019/"
 
 # ╔═╡ de75f082-0447-4afa-a3de-32649b9f2c5d
-tree = FileTree(path)
+tree = FileTree(taxipath)
 
 # ╔═╡ 27af139d-12df-4864-8a52-07a30401cd22
 map_op = FileTrees.load(tree, lazy=true) do file
-	rows = CSV.Rows(joinpath(path, file.name), reusebuffer=true)
+	rows = CSV.Rows(joinpath(taxipath, file.name), reusebuffer=true)
 	o = GroupBy(Date, CountMap(Int))
 	function parserow(row)
 		try
@@ -58,7 +58,11 @@ end
 reduce_op = reducevalues(merge, map_op)
 
 # ╔═╡ af17bb17-8965-4156-8302-6cac1906f06a
-stat = exec(reduce_op);
+begin
+	t1 = now()
+	stat = exec(reduce_op)
+	round(now() - t1, Second)
+end
 
 # ╔═╡ d71ed38a-8174-4dd1-9f8c-c6bd15d25968
 plot(stat[Date(2019,7,4)])
@@ -73,7 +77,6 @@ FileTrees = "72696420-646e-6120-6e77-6f6420746567"
 OnlineStats = "a15396b6-48d5-5d58-9928-6d29437db91e"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 
 [compat]
 CSV = "~0.9.6"
@@ -82,7 +85,6 @@ FileTrees = "~0.3.3"
 OnlineStats = "~1.5.13"
 Plots = "~1.22.6"
 PlutoUI = "~0.7.16"
-ProgressMeter = "~1.7.1"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -693,12 +695,6 @@ uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 [[Profile]]
 deps = ["Printf"]
 uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
-
-[[ProgressMeter]]
-deps = ["Distributed", "Printf"]
-git-tree-sha1 = "afadeba63d90ff223a6a48d2009434ecee2ec9e8"
-uuid = "92933f4c-e287-5a05-a399-4b506db050ca"
-version = "1.7.1"
 
 [[Qt5Base_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Fontconfig_jll", "Glib_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "OpenSSL_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libxcb_jll", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_keysyms_jll", "Xorg_xcb_util_renderutil_jll", "Xorg_xcb_util_wm_jll", "Zlib_jll", "xkbcommon_jll"]

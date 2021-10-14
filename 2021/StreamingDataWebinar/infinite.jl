@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.16.0
+# v0.16.1
 
 using Markdown
 using InteractiveUtils
@@ -14,7 +14,10 @@ macro bind(def, element)
 end
 
 # ╔═╡ 8bfe8676-2c36-11ec-0e0b-7f8e1b709bad
-using OnlineStats, Serialization, HTTP, CSV, PlutoUI, Plots, DataFrames; PlutoUI.TableOfContents()
+using OnlineStats, Serialization, HTTP, CSV, PlutoUI, Plots, DataFrames
+
+# ╔═╡ e9f60e0d-7d03-4ba6-bf5f-c7acc4247a17
+PlutoUI.TableOfContents()
 
 # ╔═╡ 0293af09-f278-434a-88bb-f8c89df56354
 md"""
@@ -1027,13 +1030,14 @@ version = "0.9.1+5"
 
 # ╔═╡ Cell order:
 # ╠═8bfe8676-2c36-11ec-0e0b-7f8e1b709bad
+# ╠═e9f60e0d-7d03-4ba6-bf5f-c7acc4247a17
 # ╟─0293af09-f278-434a-88bb-f8c89df56354
 # ╠═0ec74d08-e2ff-4497-8c1b-56edd7f6bd77
 # ╠═2077f2a3-71c2-44db-9f75-8f20d4437456
 # ╟─8edf4552-a202-46e3-8d00-77de45b471e5
 # ╠═f7f6adc0-4787-42bc-9842-c62f5c7f9dfd
 # ╟─f579d26e-428d-4b59-a92d-7327904b1d99
-# ╟─bbb1f15e-97ed-48ba-af08-6a12d73ecc1d
+# ╠═bbb1f15e-97ed-48ba-af08-6a12d73ecc1d
 # ╠═a4d410fc-4421-4f1b-885f-40b3167d9f3a
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.16.0
+# v0.16.1
 
 using Markdown
 using InteractiveUtils
@@ -15,9 +15,6 @@ end
 
 # ╔═╡ a19e8cb6-2c2b-11ec-39b6-797841a13798
 using OnlineStats, CSV, Dates, Plots, PlutoUI
-
-# ╔═╡ f4db9dc3-6263-4f89-9755-8c956795a6f4
-@everywhere using FileTrees, Dagger, DataFrames
 
 # ╔═╡ 5bb806ef-659a-4578-b725-d77688e15ffe
 PlutoUI.TableOfContents()
@@ -122,65 +119,17 @@ end
 # ╔═╡ e375a61a-34ff-49ed-af89-371a0781a793
 plot_high_low2(stock)
 
-# ╔═╡ eb6a2baf-be85-41a7-a37e-c68c6b8884de
-md"""
-# FileTrees.jl
-  - Works even with files in nested directories.
-  - Can be lazy/perform work in parallel.
-"""
-
-# ╔═╡ 249e27e7-47c6-44fb-9b1f-e53621c8bf17
-tree = FileTree(stocks_path);
-
-# ╔═╡ 9a3a2ebf-9345-4a55-8104-80b0fd13d34b
-md"""
-### Subsets of Files
-
-- Multiple ways to match sub-trees
-"""
-
-# ╔═╡ bcfcdc8b-b79a-46bb-be58-44c2c6e1dae4
-tree[glob"aap*"]
-
-# ╔═╡ 707d475a-61e9-437d-82c5-9533630ede49
-subtree = tree[r"aapl|msft|nflx|ibm[^a-z]"]
-
-# ╔═╡ afab8050-47f7-4c53-88e2-a88dfeab4091
-md"**Be lazy?** $(@bind be_lazy CheckBox())"
-
-# ╔═╡ 7e75e566-6f97-4000-807a-7b1d8f347ada
-subtree_dfs = FileTrees.load(subtree, lazy=be_lazy) do file
-	temp = DataFrame(CSV.File(joinpath(stocks_path, name(file))))
-	temp[:, :file] .= name(file)
-	temp
-end
-
-# ╔═╡ 0b4121e7-5206-4941-8c4f-645e78eeff92
-subtree_map = mapvalues(df -> maximum(df.High), subtree_dfs)
-
-# ╔═╡ 364f9267-9c1c-4540-8107-8b55b0d0c704
-subtree_map_exec = exec(subtree_map)
-
-# ╔═╡ fcc1a301-5f10-4beb-a4fc-031afeacda6b
-get(subtree_map_exec["aapl.us.txt"])
-
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
-Dagger = "d58978e5-989f-55fb-8d15-ea34adc7bf54"
-DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
-FileTrees = "72696420-646e-6120-6e77-6f6420746567"
 OnlineStats = "a15396b6-48d5-5d58-9928-6d29437db91e"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 CSV = "~0.9.6"
-Dagger = "~0.13.5"
-DataFrames = "~1.2.2"
-FileTrees = "~0.3.3"
 OnlineStats = "~1.5.13"
 Plots = "~1.22.6"
 PlutoUI = "~0.7.16"
@@ -274,27 +223,10 @@ git-tree-sha1 = "9f02045d934dc030edad45944ea80dbd1f0ebea7"
 uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
 version = "0.5.7"
 
-[[Crayons]]
-git-tree-sha1 = "3f71217b538d7aaee0b69ab47d9b7724ca8afa0d"
-uuid = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
-version = "4.0.4"
-
-[[Dagger]]
-deps = ["Colors", "Distributed", "LinearAlgebra", "MemPool", "Profile", "Random", "Requires", "Serialization", "SharedArrays", "SparseArrays", "Statistics", "StatsBase", "TableOperations", "Tables", "UUIDs"]
-git-tree-sha1 = "5a2eea0ff8436f7fabdbde1851fa04402868de41"
-uuid = "d58978e5-989f-55fb-8d15-ea34adc7bf54"
-version = "0.13.5"
-
 [[DataAPI]]
 git-tree-sha1 = "cc70b17275652eb47bc9e5f81635981f13cea5c8"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.9.0"
-
-[[DataFrames]]
-deps = ["Compat", "DataAPI", "Future", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrettyTables", "Printf", "REPL", "Reexport", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
-git-tree-sha1 = "d785f42445b63fc86caa08bb9a9351008be9b765"
-uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-version = "1.2.2"
 
 [[DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
@@ -358,12 +290,6 @@ deps = ["Dates", "Mmap", "Printf", "Test", "UUIDs"]
 git-tree-sha1 = "7fb0eaac190a7a68a56d2407a6beff1142daf844"
 uuid = "48062228-2e41-5def-b9a4-89aafe57970f"
 version = "0.9.12"
-
-[[FileTrees]]
-deps = ["AbstractTrees", "Dagger", "FilePathsBase", "Glob"]
-git-tree-sha1 = "bf0be6a2cfddb8a479b58062556f4bdf6c8506b1"
-uuid = "72696420-646e-6120-6e77-6f6420746567"
-version = "0.3.3"
 
 [[FixedPointNumbers]]
 deps = ["Statistics"]
@@ -435,11 +361,6 @@ git-tree-sha1 = "7bf67e9a481712b3dbe9cb3dac852dc4b1162e02"
 uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
 version = "2.68.3+0"
 
-[[Glob]]
-git-tree-sha1 = "4df9f7e06108728ebf00a0a11edee4b29a482bb2"
-uuid = "c27321d9-0574-5035-807b-f59d2c89b15c"
-version = "1.3.0"
-
 [[Graphite2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "344bf40dcab1073aca04aa0df4fb092f920e4011"
@@ -495,11 +416,6 @@ version = "1.0.1"
 [[InteractiveUtils]]
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
-
-[[InvertedIndices]]
-git-tree-sha1 = "bee5f1ef5bf65df56bdd2e40447590b272a5471f"
-uuid = "41ab1584-1d38-5bbf-9106-f11c6c58b48f"
-version = "1.1.0"
 
 [[IrrationalConstants]]
 git-tree-sha1 = "7fd44fd4ff43fc60815f8e764c0f352b83c49151"
@@ -662,12 +578,6 @@ git-tree-sha1 = "e498ddeee6f9fdb4551ce855a46f54dbd900245f"
 uuid = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
 version = "0.3.1"
 
-[[MemPool]]
-deps = ["DataStructures", "Distributed", "Mmap", "Random", "Serialization", "Sockets"]
-git-tree-sha1 = "334dd674df3fb0f0ed453b3384c3aabe22be29b0"
-uuid = "f9f48841-c794-520a-933b-121f7ba6ed94"
-version = "0.3.6"
-
 [[Missings]]
 deps = ["DataAPI"]
 git-tree-sha1 = "bf210ce90b6c9eed32d25dbcae1ebc565df2687f"
@@ -781,19 +691,9 @@ git-tree-sha1 = "00cfd92944ca9c760982747e9a1d0d5d86ab1e5a"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
 version = "1.2.2"
 
-[[PrettyTables]]
-deps = ["Crayons", "Formatting", "Markdown", "Reexport", "Tables"]
-git-tree-sha1 = "69fd065725ee69950f3f58eceb6d144ce32d627d"
-uuid = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
-version = "1.2.2"
-
 [[Printf]]
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
-
-[[Profile]]
-deps = ["Printf"]
-uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
 
 [[Qt5Base_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Fontconfig_jll", "Glib_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "OpenSSL_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libxcb_jll", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_keysyms_jll", "Xorg_xcb_util_renderutil_jll", "Xorg_xcb_util_wm_jll", "Zlib_jll", "xkbcommon_jll"]
@@ -902,12 +802,6 @@ version = "0.6.3"
 [[TOML]]
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
-
-[[TableOperations]]
-deps = ["SentinelArrays", "Tables", "Test"]
-git-tree-sha1 = "019acfd5a4a6c5f0f38de69f2ff7ed527f1881da"
-uuid = "ab02a1b2-a7df-11e8-156e-fb1833f50b87"
-version = "1.1.0"
 
 [[TableTraits]]
 deps = ["IteratorInterfaceExtensions"]
@@ -1185,16 +1079,5 @@ version = "0.9.1+5"
 # ╠═da1af885-6b0a-4f4a-8391-be2ea6872e0a
 # ╠═9fd5148c-641b-41ab-8f35-e97ec44261e4
 # ╠═e375a61a-34ff-49ed-af89-371a0781a793
-# ╟─eb6a2baf-be85-41a7-a37e-c68c6b8884de
-# ╠═f4db9dc3-6263-4f89-9755-8c956795a6f4
-# ╠═249e27e7-47c6-44fb-9b1f-e53621c8bf17
-# ╟─9a3a2ebf-9345-4a55-8104-80b0fd13d34b
-# ╠═bcfcdc8b-b79a-46bb-be58-44c2c6e1dae4
-# ╠═707d475a-61e9-437d-82c5-9533630ede49
-# ╠═afab8050-47f7-4c53-88e2-a88dfeab4091
-# ╠═7e75e566-6f97-4000-807a-7b1d8f347ada
-# ╠═0b4121e7-5206-4941-8c4f-645e78eeff92
-# ╠═364f9267-9c1c-4540-8107-8b55b0d0c704
-# ╠═fcc1a301-5f10-4beb-a4fc-031afeacda6b
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
