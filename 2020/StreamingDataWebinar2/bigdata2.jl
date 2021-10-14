@@ -41,12 +41,12 @@ res = reducevalues(merge, FileTrees.load(f, tree))
 
 # ╔═╡ 576e45fc-3aa0-11eb-081d-fd8ae0a53f08
 begin
-	dt = Date(2018, 1, 1)
+	dt = Date(2018, 12, 1)
 	plot(value(res)[dt], title=dt)
 end
 
 # ╔═╡ Cell order:
-# ╠═ca066b9e-3a9e-11eb-3621-856d2ec04c54
+# ╟─ca066b9e-3a9e-11eb-3621-856d2ec04c54
 # ╠═df36a95c-3a9e-11eb-281d-a31ab51c5477
 # ╠═da26b0ce-3a9e-11eb-3286-73f6403ef99c
 # ╠═23a8641a-3a9f-11eb-0f25-a9201afb2869

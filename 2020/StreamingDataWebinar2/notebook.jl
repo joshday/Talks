@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.16
+# v0.16.0
 
 using Markdown
 using InteractiveUtils
@@ -243,7 +243,7 @@ all_stocks_range = OrderedDict(
 )
 
 # ╔═╡ 2bba5d76-3a31-11eb-3df7-37b087059c31
-all_stocks_range["aapl.us.txt"]
+all_stocks_range["nflx.us.txt"]
 
 # ╔═╡ e420f5f0-3a29-11eb-28af-21d717047c79
 md"### The Lazy Version"
@@ -379,14 +379,14 @@ spacer()
 # ╟─a8ef967e-3977-11eb-2f3c-4ba98f27f17d
 # ╟─728ecfd0-3591-11eb-188c-5314bb7193ab
 # ╟─33726db0-3592-11eb-283b-cf3b743f73e3
-# ╟─441696aa-3592-11eb-2893-4fdbdff898bb
-# ╟─57511ee4-3a82-11eb-0f9a-5fd6b724561f
-# ╟─eb8e576e-3976-11eb-03c5-574581ced7be
-# ╟─4c300f88-3592-11eb-2b8e-bbebc752fbda
+# ╠═441696aa-3592-11eb-2893-4fdbdff898bb
+# ╠═57511ee4-3a82-11eb-0f9a-5fd6b724561f
+# ╠═eb8e576e-3976-11eb-03c5-574581ced7be
+# ╠═4c300f88-3592-11eb-2b8e-bbebc752fbda
 # ╟─8181af84-3978-11eb-18f1-b918c37ac814
 # ╟─27143716-3979-11eb-2956-43713e95577e
-# ╟─6c55e810-3979-11eb-1554-8bbe852ad78c
-# ╟─bda7bbbc-3979-11eb-0a3d-c3fc4ba6d270
+# ╠═6c55e810-3979-11eb-1554-8bbe852ad78c
+# ╠═bda7bbbc-3979-11eb-0a3d-c3fc4ba6d270
 # ╟─698c0222-3979-11eb-01bb-cf3da1dd820d
 # ╟─144e1cda-3985-11eb-0b9d-79a647523103
 # ╠═469a12be-3985-11eb-0fc7-2337aaef745d
@@ -394,7 +394,7 @@ spacer()
 # ╠═822af7b6-3a2d-11eb-1ed3-a357ea50d5a4
 # ╠═5db8d474-39a2-11eb-1c53-05a793a936d9
 # ╟─06b29ca8-3a2b-11eb-3ddb-9dabd6594c99
-# ╟─4e589a08-3a2b-11eb-0721-6f5526d4282b
+# ╠═4e589a08-3a2b-11eb-0721-6f5526d4282b
 # ╠═4899b368-3a2b-11eb-2e62-c5be96bf0929
 # ╠═5eda8bf6-3a2c-11eb-308d-eb3a38930db3
 # ╠═a260a500-3a2b-11eb-173f-554da8f3bd2c
@@ -408,7 +408,7 @@ spacer()
 # ╟─e420f5f0-3a29-11eb-28af-21d717047c79
 # ╠═8469f194-3a32-11eb-1120-218d9e2057f2
 # ╠═df4b995a-3a32-11eb-1d66-4fefdb9f2739
-# ╠═20219fc0-3a46-11eb-33f1-2760576843a8
+# ╟─20219fc0-3a46-11eb-33f1-2760576843a8
 # ╠═87a6e100-3a82-11eb-3d85-27086ef0a726
 # ╟─b60eac10-3985-11eb-1539-9fd75563a882
 # ╟─68037d4a-39b5-11eb-12b9-65e332b59594
@@ -422,7 +422,7 @@ spacer()
 # ╟─5b0677ee-3a5c-11eb-3a9c-45d40c2c1bca
 # ╟─90231b30-3a5c-11eb-30ff-9909e7f5249f
 # ╟─3f344196-3a5e-11eb-0531-7d5f0f3a79de
-# ╟─99e1b424-3a5c-11eb-2bb8-2356da480530
+# ╠═99e1b424-3a5c-11eb-2bb8-2356da480530
 # ╟─31d31f1a-3a5e-11eb-3dad-bb1d321c1cc7
 # ╠═ea01aedc-3a5c-11eb-2927-dfd23c1d6015
 # ╟─28081bf6-3af7-11eb-22d6-2b0b40d637bb

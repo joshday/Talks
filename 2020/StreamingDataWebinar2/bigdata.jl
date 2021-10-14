@@ -46,7 +46,7 @@ res = passenger_count_by_date(taxipath)
 
 # ╔═╡ fe8d3786-3a9d-11eb-36ae-7302e3acd409
 begin
-	dt = Date(2018, 1, 1)
+	dt = Date(2018, 6, 3)
 	plot(value(res)[dt], title=dt)
 end
 
@@ -54,7 +54,7 @@ end
 html"<div style='height:400px'>"
 
 # ╔═╡ Cell order:
-# ╠═7fbe3792-3a8a-11eb-22bb-ede9bb11122d
+# ╟─7fbe3792-3a8a-11eb-22bb-ede9bb11122d
 # ╟─d12b642e-3a8a-11eb-3905-1dfa451c5abd
 # ╠═146e1176-3a8d-11eb-1a4d-ddc32fccf5bb
 # ╠═3cbabcba-3a8d-11eb-2678-3bd14aa71388
