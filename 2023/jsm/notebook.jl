@@ -24,6 +24,9 @@ let
 	print_tree(Real)
 end
 
+# ╔═╡ f98b1a2a-89d0-4cb5-8c53-7957ca582a9f
+using LinearAlgebra
+
 # ╔═╡ f611d61e-30a1-11ee-3119-99255be33a07
 begin
 	
@@ -96,35 +99,79 @@ $(html"<img style='display:block; margin:auto' src='https://raw.githubuserconten
 
 - Dr. Josh Day, *Senior Research Scientist at JuliaHub*
 
+$(html"<img style='display:block; margin:auto; padding-bottom:20px;' src='https://juliahub.com/assets/img/juliahub-color-logo.svg' width=300px>")
+
 > I'm a Statistics PhD (NC State) who now primarily does R&D/innovative software design for government customers.  I maintain many open source Julia packages, most notably [OnlineStats](https://github.com/joshday/OnlineStats.jl), a package of parallelizable on-line algorithms for statistics.
 
+- This Pluto notebook is available at [https://github.com/joshday/Talks](https://github.com/joshday/Talks)
 
-$(html"<img style='display:block; margin:auto' src='https://juliahub.com/assets/img/juliahub-color-logo.svg' width=300px>")
+
 """
 
-# ╔═╡ 1da9ab32-7f8e-4ffb-82c9-b584e33e522c
+# ╔═╡ f259dc87-eeea-4255-8380-de51e87e6c7a
 md"""
-# This Talk
+# Why Julia?
 
-1. Overview of Julia
-2. Learnings from R
-3. Using R from Julia
-4. Should you try Julia?
+##### Why would we want/need another language?
+#### Three Claims About Why Julia is Great:
+"""
 
-- Pluto notebook available at [https://github.com/joshday/Talks](https://github.com/joshday/Talks)
+# ╔═╡ b94b68a7-aeab-4cb6-bc48-4ac27be1ee7f
+md"""
+## Claim 1
 
-#### Keep this in mind: The Sapir-Whorf Hypothesis
+!!! highlight "Julia Solves the \"Two-Language Problem\""
 
-> The structure of a language influences its speakers' worldview or cognition, and thus individuals' languages determine or shape their perceptions of the world.
+	### The Two-Language Problem:
+	#### 1. You write **prototype** code in an *easy* language.
+	#### 2. You write **production** code in a *fast* language.
 
-- [https://en.wikipedia.org/wiki/Linguistic_relativity](https://en.wikipedia.org/wiki/Linguistic_relativity)
+	!!! note "Example"
+		##### 1. You write a script to verify your new algorithm works.
+		##### 2. You now want to release your algorithm in a software package.
 
-!!! info "The Programming Language version of this:"
-	Your language influences/determines how you solve problems.
+	!!! note "Evidence that Julia Solves The Two-Language Problem"
+		##### Most Julia packages are 100% Julia!
+		##### User-defined functions are **no different** than built-in functions.
+		##### Much of Julia is written...in Julia.
+"""
 
-	- How does R/Python affect how you approach problems/write code?
+# ╔═╡ 3fcf4326-a441-4666-8bca-068a3956f228
+md"""
+## Claim 2
 
-	- How would you approach problems in Julia?
+!!! highlight "Julia Solves the \"Two-Culture Problem\""
+
+	![](https://user-images.githubusercontent.com/8075494/240981379-459fe8b7-7bc7-4652-ab79-889c32221225.png)
+	
+	![](https://user-images.githubusercontent.com/8075494/240981352-5824c33a-1a87-4213-8585-d53df2bfbb25.png)
+
+	- Images borrowed from [https://scientificcoder.com/my-target-audience](https://scientificcoder.com/my-target-audience)
+
+	> If you work with just one other person, you've probably experienced some level of this.
+
+"""
+
+# ╔═╡ 0d486c3b-66d7-4b91-b8f6-e534a84db3f1
+md"""
+## Claim 3
+
+!!! highlight "Learning Julia Changes how You Solve Problems"
+
+	#### The Sapir-Whorf Hypothesis
+	> The particular language one speaks influences the way one thinks about reality.
+	> - [https://www.sciencedirect.com/topics/psychology/sapir-whorf-hypothesis](https://www.sciencedirect.com/topics/psychology/sapir-whorf-hypothesis)
+	
+	###### The Programming Language version:
+	> Your language influences how you solve problems.
+
+
+	###### Combining ideas from claims 2 and 3:
+
+	> I'm going to use a hypothetical language called Blub...
+	> 
+	> As long as our hypothetical Blub programmer is looking down the power continuum, they know they're looking down. Languages less powerful than Blub are obviously less powerful, because they're missing features our programmer is used to. But **when our programmer looks in the other direction, up the power continuum, they don't realize they're looking up. What they see are merely weird languages.** They probably considers them about equivalent in power to Blub, but with all this other hairy stuff thrown in as well. Blub is good enough for them, because they think in Blub.
+	> - Paraphrased from Paul Graham's ["Beating the Averages" Essay](http://www.paulgraham.com/avg.html) (emphasis added)
 """
 
 # ╔═╡ ec35cc71-9656-4a4f-b854-d69b3abc3851
@@ -134,77 +181,53 @@ md"""
 
 # ╔═╡ 8fcfaeca-eab8-4e30-ac80-5bf77e4d8f97
 md"""
-## 1. Performance
+## Performance
 
-![](https://julialang.org/assets/images/benchmarks.svg)
-
-!!! info "Can I take what makes Julia fast and bolt it onto R/Python?"
-	Not really.  Julia is fast because of core design decisions that work well together.
+$(html"<img style='background:white; border-radius:4px;' src='https://julialang.org/assets/images/benchmarks.svg'>")
 """
 
 # ╔═╡ 4f56158c-5e53-4dcb-a62b-6a0fb7bc6d1b
 md"""
 !!! success "Quick Story"
 	- At my first JuliaCon (2016), I saw Doug Bates give a 10 minute lightning talk about `MixedModels.jl`.
-	- He had translated a model from R to Julia that took "most of the day" to fit  in `lme4`.
-	- He ran live code and fit the model in ~5 minutes during his lightning talk.
+	- He'd translated a model from R to Julia that took "most of the day" to fit  in his "best-written R code".
+	- He ran live code and fit the model within his 10 minute talk.
 """
 
 # ╔═╡ be5c6bcd-fcd0-4637-ba74-3db56aa70458
 md"""
-## 2. Multiple Dispatch/Specialization
+## Automatic Specialization
 
-- Julia uses a Just-in-time (JIT) compiler (LLVM).
+!!! note "Julia uses a Just-in-time (JIT) compiler (LLVM)"
+	
+
+	- Start with a simple function:
+	```julia
+	f(x, y) = x + y
+	```
+
+	- `f(1, 2)` will compile a *method* for `f(::Int,::Int)`
+	- `f(1.0, 2.0)` will compile a *method* for `f(::Float64, ::Float64)`
+	- The next time you call a compiled method you don't need to recompile it, e.g. `f(4,5)`.
 """
-
-# ╔═╡ 6db786aa-7e5f-4911-99f9-1cd5ff567698
-f(x) = x + x
-
-# ╔═╡ f2a88086-dcc1-449e-8ee2-23bb14fac992
-# The JIT compiles a method specific to 64-bit Integers
-@code_llvm f(1)
-
-# ╔═╡ 3eaafd87-508f-484c-9816-9a90518b3cb0
-# Similarly, the JIT compiles a method specific to double precision floats
-@code_llvm f(1.0)
 
 # ╔═╡ 3754ba52-4617-4313-bcc4-d86bd2dc10a8
 md"""
 !!! info "Specialized code \"for free\""
-	I didn't tell Julia about the type of the input, but I still get *specialized* code.
+	You get *specialized* code without telling Julia about the types of inputs.
 """
 
-# ╔═╡ de051b5d-adaa-4d6e-a2a7-498fee248201
+# ╔═╡ f3aa35ba-d7fe-4e48-a8ba-76f760ec6b52
 md"""
-!!! note "Built-in vs. User-defined functions"
-	- Built-in functions aren't special.  
-	- There's no difference between built-in and user-defined functions.
+!!! note "A more complicated example"
 
-	#### Related:
-
-	- Most Julia packages are **100% Julia**.  This is really helpful for debugging!  
-	  - `@edit f(...)` immediately opens up the file where the method `f` is defined. 
-      - It's nice to see Julia under the hood and not calls to C/Fortran.
-"""
-
-# ╔═╡ 4284c6e9-2801-4e63-870f-4ebf6b9ab3d8
-md"""
-!!! note "Note: Dispatch and Multiple Dispatch"
-    - **Dispatch** is the choice of which method to execute when a function is applied. 
-	- **Multiple Dispatch** is dispatch based on the types of *all* arguments to a function.
-"""
-
-# ╔═╡ f809185e-c624-42bd-9b91-68b2dd854672
-md"""
-#### A more complicated example:
-
-Finding quantiles with Newton's Method for finding roots:
-
-$$\text{Solve for } x \text{:}\quad F_X(x) - q= 0$$
-
-- where $F_X$ is CDF of random variable $X$.
-
-$$x_{n+1} = x_n - \frac{F_X(x_n) - q}{F_X'(x_n)}$$
+	Finding quantiles with Newton's Method for finding roots:
+	
+	$$\text{Solve for } x \text{:}\quad F_X(x) - q= 0$$
+	
+	- where $F_X$ is CDF of random variable $X$.
+	
+	$$x_{n+1} = x_n - \frac{F_X(x_n) - q}{F_X'(x_n)}$$
 
 """
 
@@ -217,46 +240,43 @@ function myquantile(dist, q)
     x
 end
 
-# ╔═╡ 4318a3e9-b33c-47aa-8a5b-10cf33a84f96
-@info "Does this work?" quantile(Gamma(40,1), .5) myquantile(Gamma(40,1), .5)
-
 # ╔═╡ e43a9b9f-369f-44a4-804f-f50b64fb49fe
 md"""
-Let's try a few more distributions:
+#### Does it Work?
 
-$(@bind dist Select([Normal(), Gamma(5,1), Beta(7,2), nothing]))
+$(@bind dist Select([Normal(), Gamma(5,1), Uniform(0,1), Beta(7,2), nothing]))
 """
 
 # ╔═╡ 77230db4-dfaa-4559-a054-328931a0bb56
 let
 	rng = .01:.01:.99
-	isnothing(dist) ? nothing : Plot()(
-		y=rng, x=quantile.(dist, rng), name="quantile"
-	)(
-		y=rng, x=myquantile.(dist, .01:.01:.99), line=(;dash="dot"),
-		name="myquantile"
-	)
+	if isnothing(dist) 
+		nothing 
+	else
+		p = Plot()(
+			y=rng, x=quantile.(dist, rng), name="quantile"
+		)(
+			y=rng, x=myquantile.(dist, .01:.01:.99), line=(;dash="dot"),
+			name="myquantile"
+		)
+		p.layout.title=string(dist)
+		p
+	end
 end
 
 # ╔═╡ 44d794c1-fa56-4d71-950d-da8c77f926ea
 md"""
-## 3. Type System
+## Type System/Multiple Dispatch
 
 - Abstract types don't "exist", but define a set.
 - Concrete types "exist".
 
 !!! note "Types: Think Sets"
-	Using an abstract type as a type annotation says "this function works with any type from this set"
+	Using an abstract type in a type annotation (e.g. `f(::Real)`) says:
 
-	```julia
-	f(x::Integer) = x + 1
+	> this function works with any type from this set.
 
-	f(1.0)  # error, because 1.0 isa Float64 (not in set of Integers)
-
-	g(x::Real) = x + 1 
-
-	g(1.0)  # success!
-	```
+	- Subtypes of `Real`:
 """
 
 # ╔═╡ a724cfe9-9b7c-43c8-80a0-ce87325cf327
@@ -265,7 +285,7 @@ md"""
 	*Type Annotations* do not affect performance. e.g.
 
 	```julia
-	f(x::Number) = x + x
+	f(x::Real) = x + x
 	```
 
 	They are used for two things:
@@ -273,10 +293,13 @@ md"""
 	1. **Validating user inputs.** E.g. You never need to do this:
 	```julia
 		function f(x)
-			x isa String || error("x should be a string")
+			x isa Real || error("x should be a real number")
 		end
 	```
 	2. **(Multiple) Dispatch**.  E.g.
+
+	- Function has a different meaning depending on the type:
+
 	```julia
 	half(x::Number) = x / 2 
 
@@ -290,12 +313,63 @@ let
 
     half(x) = x[1:floor(Int, length(x) / 2)]
 
-	@info "Dispatch example with half" half(1) half(5//5) half(1 + 1im) half("ABCDEFG") half([1,2,3,4]) half(1:4) half((1,2,3,4))
+	@info "Dispatch example with half" half(1 + 1im) half("ABCDEFG")
 end
+
+# ╔═╡ b7f9c148-68a7-4b9f-95ad-17c3e6c46dff
+md"""
+### Multiple Dispatch Example: `Matrix` vs. `Diagonal`
+"""
+
+# ╔═╡ 05398982-680e-4b8b-baa7-52e66e587798
+md"""
+!!! note "Note: Dispatch and Multiple Dispatch"
+    - **Dispatch** is the choice of which method to execute when a function is applied. 
+	- **Multiple Dispatch** is dispatch based on the types of *all* arguments to a function.
+"""
+
+# ╔═╡ 79348898-63ae-4e8b-8ed9-d030ac6537b2
+let 
+	# `Diagonal` doesn't store the off-diagonal elements
+	x = Diagonal(randn(1000))
+
+	# `Matrix` stores the off-diagonals (all are 0.0)
+	x2 = Matrix(x)
+	
+	y = randn(1000)
+
+	
+	t1 = @elapsed x * y
+	t2 = @elapsed x2 * y
+	@info "Dense matrix multiply is $(t2/ t1) times slower than Diagonal."
+end
+
+# ╔═╡ d30def63-efdf-4ff1-9936-0d4381019647
+md"""
+!!! note "How MixedModels.jl uses Multiple Dispatch"
+	#### MixedModels.jl takes great advantage of this!
+
+	###### Design matrices in mixed effect models have lot of structure:
+	- Block diagonal
+	- Block sparse 
+
+	###### MixedModels.jl doesn't need separate implementations for the above two cases.
+	- It just needs to rely on the methods (e.g. `*`, `+`) defined for its `AbstractMatrix` types.
+"""
+
+# ╔═╡ 908f7907-2bb9-4b76-a2c8-864517d399cb
+md"""
+!!! note "Composability in Julia"
+	Due to the fact you get *specialized* code with an *abstract* implementation, Julia packages **compose** really well without explicit dependencies.
+
+	E.g.
+	- Write a `f(::AbstractMatrix)` function.
+	- use **StaticArrays.jl** or **BlockArrays.jl** for free speedups in some cases.
+"""
 
 # ╔═╡ 9f45fc0d-33ee-4e43-813c-ddc25ac755f7
 md"""
-## 4. Broadcasting
+## Broadcasting
 
 - Make operations more explicit at the cost of one character.
 
@@ -328,7 +402,7 @@ end
 
 # ╔═╡ 4a9081f9-df1c-4ed1-a38f-64af8b1c527f
 md"""
-## 5. Metaprogramming/Macros
+## Metaprogramming/Macros
 
 !!! note "What is a Macro?"
 	A function of an *expression*.  Macros can change an expression before it gets evaluated.
@@ -373,6 +447,15 @@ md"""
 	R's "Non-standard evaluation" makes every function macro-ish.
 """
 
+# ╔═╡ c5861930-a539-4cbb-86f7-dfd25e81f60a
+md"""
+## Reproducibility
+
+- Julia's package manager (Pkg) works really really well.
+- **Reproducibility is important to the community as a whole.**
+  - Pluto notebooks are self-contained text (`.jl`) files that are easily shared.
+"""
+
 # ╔═╡ 5d99e59e-11d1-4ab0-884d-dfcefbde165c
 md"""
 # Learnings from R
@@ -411,6 +494,12 @@ end
 md"""
 !!! note "The Influence of Dr. Doug Bates"
 	Doug provided the [JuliaStats](https://github.com/JuliaStats) community with a plethora of knowledge about the inner workings of R (as well as why certain decisions were made).
+
+	A common flow:
+	1. What should Julia do about X?
+	2. Well what does R do?
+	3. R does this.  Why?
+	4. Ask Doug
 """
 
 # ╔═╡ 67d27cda-4799-4762-b470-19de5708538b
@@ -491,7 +580,7 @@ end
 
 # ╔═╡ ed3adc2e-28ca-489c-a5a3-ca425f92e28f
 begin
-	R"library(ggplot2)"
+	R"library(ggplot2)"  # Use the `R` string macro to load ggplot2
 	@ggplot2 ggplot(mpg, aes(displ, hwy, colour = class)) + geom_point()
 end
 
@@ -504,10 +593,10 @@ md"""
 """
 
 # ╔═╡ 4f2929bb-8a82-4fe5-8a09-70e47bdc408a
-y = randn(1000)
+julia_data = randn(1000)
 
 # ╔═╡ 3fe50422-12ed-44d8-a068-7eb60b846eda
-@ggplot2 ggplot(mapping=aes($y)) + geom_histogram()
+@ggplot2 ggplot(mapping=aes($julia_data)) + geom_histogram()
 
 # ╔═╡ 38b373ca-b5c4-407a-961a-a38c0824423e
 md"""
@@ -515,6 +604,15 @@ md"""
 	- Similar to `@rput`, we have `@rget`.
 	- Type conversions are automatic for many things, but you can write your own custom conversions as well.
 """
+
+# ╔═╡ 4a55e6ba-c7ca-4bc9-a37c-962012ea09a9
+let 
+	R"data <- mpg"
+	
+	@rget data
+	
+	describe(data)
+end
 
 # ╔═╡ 2bedfb05-b4f9-419e-b07e-33bda10f0855
 md"""
@@ -524,34 +622,11 @@ md"""
 # ╔═╡ 3bd96954-b28b-42f9-9678-b1cb93bea0b5
 md"""
 !!! yes "Yes if:"
-	- You develop novel algorithms.
+	- **Any of the three claims at the top resonated with you.**
+	- You develop novel methods/algorithms.
 	- You care about performance.
-	- You don't have a large stack of dependencies.
-	- You occasionally prefer to write your own implementation.
-"""
-
-# ╔═╡ 6e6c9ee4-4ba9-410a-af8b-341303356d1d
-md"""
-!!! warning "Maybe if:"
-	- You're trying to speed up your code with RCpp.
-"""
-
-# ╔═╡ da6fed74-081e-488a-822c-5fe53a299f30
-md"""
-!!! danger "No if:"
-	- You heavily depend on packages that only exist in your language of choice (*and you don't want to implement it yourself*).
-	- Your language of choice is already good (enough).
-"""
-
-# ╔═╡ 82e6f29a-fa7d-4250-9793-b99d4712bac9
-md"""
----
-
-!!! note
-	One thing I want to emphasize is **don't be scared of the perceived additional complexity** over R.
-
-	- It's very easy to write high-level code.
-	- Low-level idiosyncratic things are available, but not necessary.
+	  - And you want a cleaner workflow than R + RCpp.
+	- You have time to tinker with Julia while your R code is running.
 """
 
 # ╔═╡ c2f2b913-bc2b-465c-8af2-b659ff3b64de
@@ -562,9 +637,9 @@ md"""
 
 #### Julia Resources
 
-- Discourse
-- Slack
-- Official Julia Documentation
+- [https://discourse.julialang.org](https://discourse.julialang.org)
+- [https://julialang.slack.com](https://julialang.slack.com)
+- [Official Julia Documentation](https://docs.julialang.org/en/v1/)
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -577,6 +652,7 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 EasyConfig = "acab07b0-f158-46d4-8913-50acef6d41fe"
 GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PlotlyLight = "ca7969ec-10b3-423e-8d99-40f33abb42bf"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 RCall = "6f49c342-dc21-5d91-9882-a32aef131414"
@@ -602,7 +678,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.2"
 manifest_format = "2.0"
-project_hash = "4fd9ab6315b846e72d3aef91055566381a2aba76"
+project_hash = "ce6bf84be996f535d76ff7d04eceeac30a0783f1"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -1274,26 +1350,29 @@ version = "17.4.0+0"
 # ╔═╡ Cell order:
 # ╟─28c981d6-30ab-45fd-bc5f-7649eb371894
 # ╟─4c4b2682-d008-416e-8898-85fd2250d877
-# ╟─1da9ab32-7f8e-4ffb-82c9-b584e33e522c
+# ╟─f259dc87-eeea-4255-8380-de51e87e6c7a
+# ╟─b94b68a7-aeab-4cb6-bc48-4ac27be1ee7f
+# ╟─3fcf4326-a441-4666-8bca-068a3956f228
+# ╟─0d486c3b-66d7-4b91-b8f6-e534a84db3f1
 # ╟─ec35cc71-9656-4a4f-b854-d69b3abc3851
 # ╟─8fcfaeca-eab8-4e30-ac80-5bf77e4d8f97
 # ╟─4f56158c-5e53-4dcb-a62b-6a0fb7bc6d1b
 # ╟─be5c6bcd-fcd0-4637-ba74-3db56aa70458
-# ╠═6db786aa-7e5f-4911-99f9-1cd5ff567698
-# ╠═f2a88086-dcc1-449e-8ee2-23bb14fac992
-# ╠═3eaafd87-508f-484c-9816-9a90518b3cb0
 # ╟─3754ba52-4617-4313-bcc4-d86bd2dc10a8
-# ╟─de051b5d-adaa-4d6e-a2a7-498fee248201
-# ╟─4284c6e9-2801-4e63-870f-4ebf6b9ab3d8
-# ╟─f809185e-c624-42bd-9b91-68b2dd854672
+# ╟─f3aa35ba-d7fe-4e48-a8ba-76f760ec6b52
 # ╠═7f1be803-c01c-4223-bf63-19c5b5a4d781
-# ╠═4318a3e9-b33c-47aa-8a5b-10cf33a84f96
 # ╟─e43a9b9f-369f-44a4-804f-f50b64fb49fe
 # ╟─77230db4-dfaa-4559-a054-328931a0bb56
 # ╟─44d794c1-fa56-4d71-950d-da8c77f926ea
-# ╠═daebeaf7-b7a5-4a29-afd5-19b57a0f37f7
+# ╟─daebeaf7-b7a5-4a29-afd5-19b57a0f37f7
 # ╟─a724cfe9-9b7c-43c8-80a0-ce87325cf327
 # ╟─24a31b5d-7309-4774-8adb-acb6d462525c
+# ╟─b7f9c148-68a7-4b9f-95ad-17c3e6c46dff
+# ╟─05398982-680e-4b8b-baa7-52e66e587798
+# ╠═f98b1a2a-89d0-4cb5-8c53-7957ca582a9f
+# ╠═79348898-63ae-4e8b-8ed9-d030ac6537b2
+# ╟─d30def63-efdf-4ff1-9936-0d4381019647
+# ╟─908f7907-2bb9-4b76-a2c8-864517d399cb
 # ╟─9f45fc0d-33ee-4e43-813c-ddc25ac755f7
 # ╠═27f7a89f-de60-4753-8fd6-73964ae3c600
 # ╟─4a9081f9-df1c-4ed1-a38f-64af8b1c527f
@@ -1304,6 +1383,7 @@ version = "17.4.0+0"
 # ╠═309bee08-7f31-4185-bb89-3f6a1715157a
 # ╠═5024e1ab-1b03-4145-bca8-48a2ab8a0fe1
 # ╟─4b1ea454-ff92-4b26-a9ab-dbd6c20599bf
+# ╟─c5861930-a539-4cbb-86f7-dfd25e81f60a
 # ╟─5d99e59e-11d1-4ab0-884d-dfcefbde165c
 # ╟─a0d6bcd3-eff8-492c-8983-00974ec5eea4
 # ╟─678a6bfc-6758-4ab3-8bc4-c3eb8fecee3b
@@ -1321,11 +1401,9 @@ version = "17.4.0+0"
 # ╠═4f2929bb-8a82-4fe5-8a09-70e47bdc408a
 # ╠═3fe50422-12ed-44d8-a068-7eb60b846eda
 # ╟─38b373ca-b5c4-407a-961a-a38c0824423e
+# ╠═4a55e6ba-c7ca-4bc9-a37c-962012ea09a9
 # ╟─2bedfb05-b4f9-419e-b07e-33bda10f0855
 # ╟─3bd96954-b28b-42f9-9678-b1cb93bea0b5
-# ╟─6e6c9ee4-4ba9-410a-af8b-341303356d1d
-# ╟─da6fed74-081e-488a-822c-5fe53a299f30
-# ╟─82e6f29a-fa7d-4250-9793-b99d4712bac9
 # ╟─c2f2b913-bc2b-465c-8af2-b659ff3b64de
 # ╟─f611d61e-30a1-11ee-3119-99255be33a07
 # ╟─00000000-0000-0000-0000-000000000001

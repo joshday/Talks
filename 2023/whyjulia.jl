@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.26
+# v0.19.27
 
 using Markdown
 using InteractiveUtils
@@ -119,7 +119,7 @@ PlutoUI = "~0.7.51"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.0"
+julia_version = "1.9.2"
 manifest_format = "2.0"
 project_hash = "dcebd3174a85b0f68c71e8431fe1914ebcbe8db2"
 
@@ -148,7 +148,7 @@ version = "0.11.4"
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.0.2+0"
+version = "1.0.5+0"
 
 [[deps.Dates]]
 deps = ["Printf"]
@@ -264,7 +264,7 @@ version = "2.5.10"
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
-version = "1.9.0"
+version = "1.9.2"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
@@ -364,7 +364,7 @@ version = "1.2.13+0"
 [[deps.libblastrampoline_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.7.0+0"
+version = "5.8.0+0"
 
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -380,11 +380,11 @@ version = "17.4.0+0"
 # ╔═╡ Cell order:
 # ╟─3797c3c8-fb19-11ed-17d8-67d3189a3a55
 # ╟─4b3c23c3-7704-4e8d-87ae-23e747c3047d
-# ╟─54a517af-4659-4afd-89c1-37d962a6d4e5
+# ╠═54a517af-4659-4afd-89c1-37d962a6d4e5
 # ╟─7bd8395c-1407-49b3-b334-5cae48cd8132
-# ╟─00a0b4a7-bebd-474b-9ecb-2929d71205c2
+# ╠═00a0b4a7-bebd-474b-9ecb-2929d71205c2
 # ╟─96356e6a-33da-4dd3-9025-532939070fd5
-# ╟─cba32239-6619-4aeb-975b-7897a3ef8095
+# ╠═cba32239-6619-4aeb-975b-7897a3ef8095
 # ╟─bba08883-8e3d-4d61-b884-e8ad8b8dd17a
 # ╟─1450aeb6-7f32-4fe9-bb47-8116ecae290f
 # ╟─115aad38-34fd-4260-b3a0-25d76525d506
