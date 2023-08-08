@@ -71,8 +71,7 @@ begin
 	end
 
 	md"""
-	$(h.div(style="height:90vh"))
-	(setup) 
+	# (Notebook Setup)
 	$(PlutoUI.TableOfContents())
 	$(html"
 		<style>
@@ -88,7 +87,7 @@ begin
 end
 
 # ╔═╡ 28c981d6-30ab-45fd-bc5f-7649eb371894
-html"<button onclick='present()'>present</button>"
+md"""# Present: $(html"<button onclick='present()'>present</button>")"""
 
 # ╔═╡ 4c4b2682-d008-416e-8898-85fd2250d877
 md"""
@@ -101,7 +100,7 @@ $(html"<img style='display:block; margin:auto' src='https://raw.githubuserconten
 
 $(html"<img style='display:block; margin:auto; padding-bottom:20px;' src='https://juliahub.com/assets/img/juliahub-color-logo.svg' width=300px>")
 
-> I'm a Statistics PhD (NC State) who now primarily does R&D/innovative software design for government customers.  I maintain many open source Julia packages, most notably [OnlineStats](https://github.com/joshday/OnlineStats.jl), a package of parallelizable on-line algorithms for statistics.
+> I'm a Statistics PhD (NC State) who now primarily does R&D/innovative software design for government customers.  I maintain many open source Julia packages, notably [OnlineStats](https://github.com/joshday/OnlineStats.jl), a package of parallelizable on-line algorithms for statistics.
 
 - This Pluto notebook is available at [https://github.com/joshday/Talks](https://github.com/joshday/Talks)
 
@@ -113,6 +112,14 @@ md"""
 # Why Julia?
 
 ##### Why would we want/need another language?
+
+!!! warning "Julia Really is Nice"
+	- Frankly I'm surprised that Julia has had little traction among (computational) statisticians.
+	- I feel like learning Julia gave me super powers for my computationally-heavy research.
+	- **Find me later if you'd like more details!**
+
+---
+
 #### Three Claims About Why Julia is Great:
 """
 
@@ -156,7 +163,7 @@ md"""
 md"""
 ## Claim 3
 
-!!! highlight "Learning Julia Changes how You Solve Problems"
+!!! highlight "Learning Julia Changes how You Solve Problems with Code"
 
 	#### The Sapir-Whorf Hypothesis
 	> The particular language one speaks influences the way one thinks about reality.
@@ -170,7 +177,7 @@ md"""
 
 	> I'm going to use a hypothetical language called Blub...
 	> 
-	> As long as our hypothetical Blub programmer is looking down the power continuum, they know they're looking down. Languages less powerful than Blub are obviously less powerful, because they're missing features our programmer is used to. But **when our programmer looks in the other direction, up the power continuum, they don't realize they're looking up. What they see are merely weird languages.** They probably considers them about equivalent in power to Blub, but with all this other hairy stuff thrown in as well. Blub is good enough for them, because they think in Blub.
+	> As long as our hypothetical Blub programmer is looking down the power continuum, they know they're looking down. Languages less powerful than Blub are obviously less powerful, because they're missing features our programmer is used to. But **when our programmer looks up the power continuum, they don't realize they're looking up. What they see are merely weird languages.** They probably considers them about equivalent in power to Blub, but with all this other hairy stuff thrown in as well. Blub is good enough for them, because they think in Blub.
 	> - Paraphrased from Paul Graham's ["Beating the Averages" Essay](http://www.paulgraham.com/avg.html) (emphasis added)
 """
 
@@ -307,14 +314,24 @@ md"""
 	```
 """
 
-# ╔═╡ 24a31b5d-7309-4774-8adb-acb6d462525c
-let
+# ╔═╡ 4fb00db2-ea4b-4e21-a1ae-02fc21bcfc3c
+begin 
 	half(x::Number) = x / 2 
 
     half(x) = x[1:floor(Int, length(x) / 2)]
-
-	@info "Dispatch example with half" half(1 + 1im) half("ABCDEFG")
 end
+
+# ╔═╡ 8dc68ace-4f1c-44af-a112-571d5e5ae6f3
+half(1)
+
+# ╔═╡ 97bd1cb2-fe76-4d44-8738-a3750d0f19a6
+half(1 + 2im)
+
+# ╔═╡ 892abcee-4e17-4b1d-80eb-ffa5d006b6ff
+half("ABCDEFG")
+
+# ╔═╡ 1a4e61a3-7d58-4348-a409-550b56d93810
+half(1:10)
 
 # ╔═╡ b7f9c148-68a7-4b9f-95ad-17c3e6c46dff
 md"""
@@ -344,6 +361,12 @@ let
 	@info "Dense matrix multiply is $(t2/ t1) times slower than Diagonal."
 end
 
+# ╔═╡ 65180941-5ef9-4cf1-a7e1-f87034e5863e
+md"""
+!!! note "How does this work?"
+	- The `*(::Diagonal, ::Vector)` method is faster than the `*(::Matrix, ::Vector)` method.
+"""
+
 # ╔═╡ d30def63-efdf-4ff1-9936-0d4381019647
 md"""
 !!! note "How MixedModels.jl uses Multiple Dispatch"
@@ -353,18 +376,18 @@ md"""
 	- Block diagonal
 	- Block sparse 
 
-	###### MixedModels.jl doesn't need separate implementations for the above two cases.
-	- It just needs to rely on the methods (e.g. `*`, `+`) defined for its `AbstractMatrix` types.
+	###### MixedModels.jl doesn't need separate implementations for different structures in a design matrix.
+	- It just needs to rely on the methods (e.g. `*`, `+`) that are optimized for its `AbstractMatrix` types.
 """
 
 # ╔═╡ 908f7907-2bb9-4b76-a2c8-864517d399cb
 md"""
-!!! note "Composability in Julia"
-	Due to the fact you get *specialized* code with an *abstract* implementation, Julia packages **compose** really well without explicit dependencies.
+!!! note "Related: Julia Packages are Often "Composable\""
+	- I.e. they work together without an explicit dependency.
 
-	E.g.
-	- Write a `f(::AbstractMatrix)` function.
-	- use **StaticArrays.jl** or **BlockArrays.jl** for free speedups in some cases.
+	##### Example
+	- You write a function `f(::AbstractMatrix)`.
+	- Now you realize your input is a block matrix, so you use **BlockArrays.jl** for a free speedup.
 """
 
 # ╔═╡ 9f45fc0d-33ee-4e43-813c-ddc25ac755f7
@@ -382,23 +405,32 @@ abs(x)  # Error
 # "broadcast" `abs` to each element of `x`
 abs.(x)  
 ```
-- Chain broadcasts to avoid temporary copies -> Big performance gains!
+!!! info "Chaining Broadcasts"
+	You can "chain" broadcasts to avoid temporary copies -> Big performance gains!
+
+	##### Example
+
+	- In Julia: no temporary vectors → less **garbage collection**
+	```julia
+	abs.(sin.(sqrt.(1:100 .+ 10)))
+	```
+
+	- In R:
+	```R
+	y = abs(sin(sqrt(1:100 + 10)))
+
+	# is essentially:
+	temp1 = 1:100 + 10
+	temp2 = sqrt(temp1)
+	temp3 = sin(temp2)
+	abs(temp3)
+
+	# You can avoid temporary vectors:
+	sapply(1:100, function(x) abs(sin(sqrt(x + 10))))
+
+	# But...the path of least resistance is what's above 
+	```
 """
-
-# ╔═╡ 27f7a89f-de60-4753-8fd6-73964ae3c600
-let 
-	x = randn(100)
-
-	y = abs.(sin.(sqrt.(x .+ 10)))
-
-	# What R does with: y = abs(sin(sqrt(x + 10)))
-
-	# Essentially, R is doing:
-	temp1 = x .+ 10
-	temp2 = sqrt.(temp1)
-	temp3 = sin.(temp2)
-	y = abs.(temp3)
-end
 
 # ╔═╡ 4a9081f9-df1c-4ed1-a38f-64af8b1c527f
 md"""
@@ -407,7 +439,7 @@ md"""
 !!! note "What is a Macro?"
 	A function of an *expression*.  Macros can change an expression before it gets evaluated.
 
-	- Julia expressions are represented in Julia.
+	- Julia expressions are **represented in Julia (`Expr`)**.
 
 	```julia
 	@mymacro 1 + 2
@@ -420,6 +452,7 @@ md"""
 dump(Meta.parse("1 + 1"))
 
 # ╔═╡ c50b6262-77ab-486b-8b86-b61ed07e6f50
+# Change second argument of infix operator to `100`
 macro mymacro(ex)
 	ex.args[end] = 100
 	return ex
@@ -428,18 +461,8 @@ end
 # ╔═╡ e7d3f396-a446-485e-9022-77f7ddc73472
 @mymacro 1 + 2
 
-# ╔═╡ 62c23af8-c3b6-4226-a665-17d40d126c01
-macro change_op_to_mul(ex)
-	quote 
-		$(ex.args[2]) * $(ex.args[3])
-	end
-end
-
-# ╔═╡ 309bee08-7f31-4185-bb89-3f6a1715157a
-@change_op_to_mul 5 + 5
-
-# ╔═╡ 5024e1ab-1b03-4145-bca8-48a2ab8a0fe1
-@change_op_to_mul 5 / 5
+# ╔═╡ 45385342-ff69-4635-ac12-2a3b3f151ecc
+@mymacro 2 * "This will get replaced"
 
 # ╔═╡ 4b1ea454-ff92-4b26-a9ab-dbd6c20599bf
 md"""
@@ -451,9 +474,16 @@ md"""
 md"""
 ## Reproducibility
 
-- Julia's package manager (Pkg) works really really well.
-- **Reproducibility is important to the community as a whole.**
-  - Pluto notebooks are self-contained text (`.jl`) files that are easily shared.
+!!! note "Pkg"
+	- Julia's package manager (Pkg) works **really, really well**.
+	- Great system for "artifacts" (any data that isn't Julia code).
+	- Package registry has a lot of "JLL" packages (platform-specific binary dependencies), e.g. `SQLite_jll.jl` is used by the `SQLite.jl` package.
+
+!!! note "Reproducibility is a Community Effort"
+	- Reproducibility is important to the community as a whole.
+	- **Pluto** notebooks are a self-contained text (`.jl`) file.
+	  - When sharing, the recipient will get the **identical environment** as the sender.
+
 """
 
 # ╔═╡ 5d99e59e-11d1-4ab0-884d-dfcefbde165c
@@ -548,7 +578,7 @@ end
 md"""
 !!! highlight "3) The rest of the language"
 	- **RCall.jl** provides fantastic calling-R-from-Julia interop.
-	- The time you've spent learning `lattice`/`ggplot2`/etc. doesn't go to waste when you switch to Julia.
+	- The time you've spent learning `lattice`/`ggplot2`/etc. doesn't go to waste when you try Julia.
 	  - If I recall correctly, Doug wrote **RCall** for this very reason.
 """
 
@@ -581,6 +611,7 @@ end
 # ╔═╡ ed3adc2e-28ca-489c-a5a3-ca425f92e28f
 begin
 	R"library(ggplot2)"  # Use the `R` string macro to load ggplot2
+	
 	@ggplot2 ggplot(mpg, aes(displ, hwy, colour = class)) + geom_point()
 end
 
@@ -621,19 +652,40 @@ md"""
 
 # ╔═╡ 3bd96954-b28b-42f9-9678-b1cb93bea0b5
 md"""
-!!! yes "Yes if:"
+!!! yes "Yes!  Particularly if:"
 	- **Any of the three claims at the top resonated with you.**
 	- You develop novel methods/algorithms.
 	- You care about performance.
 	  - And you want a cleaner workflow than R + RCpp.
 	- You have time to tinker with Julia while your R code is running.
+	- You want to use some of the state-of-the-art packages in Julia.
+"""
+
+# ╔═╡ 855a9981-9860-4e25-9b8f-4a14303bd559
+md"""
+!!! info "Packages to Look Into"
+	- **DifferentialEquations**: Multi-language suite for high-performance solvers of differential equations and scientific machine learning (SciML) components
+	- **ModelingToolkit**: An acausal modeling framework for automatically parallelized scientific machine learning (SciML) in Julia.
+	- **Pluto** Simple, reactive programming environment for Julia.
+	- **Turing**: Bayesian inference via probabilistic programming.
+	- **Makie** Interactive visualizations and powerful plotting in Julia.
+	- **JuMP**: Modeling language for Mathematical Optimization (linear, mixed-integer, conic, semidefinite, nonlinear).
+	- **MLJ**: A Julia machine learning framework.
+	- **OnlineStats**: Single-pass algorithms for statistics.
+	- **Graphs**: An optimized graphs package for Julia.
+	- **Javis**: Julia Animations and Visualizations.
 """
 
 # ╔═╡ c2f2b913-bc2b-465c-8af2-b659ff3b64de
 md"""
 # Thank You!
 
+$(html"<img style='display:block; margin:auto' src='https://raw.githubusercontent.com/JuliaLang/julia-logo-graphics/master/images/julia-logo-dark.svg' width=200px>")
+
+---
+
 - Find me on GitHub: [`@joshday`](https://github.com/joshday)
+- There's too much to talk about!  Find me after the session if you'd like to talk more.
 
 #### Julia Resources
 
@@ -1366,22 +1418,24 @@ version = "17.4.0+0"
 # ╟─44d794c1-fa56-4d71-950d-da8c77f926ea
 # ╟─daebeaf7-b7a5-4a29-afd5-19b57a0f37f7
 # ╟─a724cfe9-9b7c-43c8-80a0-ce87325cf327
-# ╟─24a31b5d-7309-4774-8adb-acb6d462525c
+# ╠═4fb00db2-ea4b-4e21-a1ae-02fc21bcfc3c
+# ╠═8dc68ace-4f1c-44af-a112-571d5e5ae6f3
+# ╠═97bd1cb2-fe76-4d44-8738-a3750d0f19a6
+# ╠═892abcee-4e17-4b1d-80eb-ffa5d006b6ff
+# ╠═1a4e61a3-7d58-4348-a409-550b56d93810
 # ╟─b7f9c148-68a7-4b9f-95ad-17c3e6c46dff
 # ╟─05398982-680e-4b8b-baa7-52e66e587798
 # ╠═f98b1a2a-89d0-4cb5-8c53-7957ca582a9f
 # ╠═79348898-63ae-4e8b-8ed9-d030ac6537b2
+# ╟─65180941-5ef9-4cf1-a7e1-f87034e5863e
 # ╟─d30def63-efdf-4ff1-9936-0d4381019647
 # ╟─908f7907-2bb9-4b76-a2c8-864517d399cb
 # ╟─9f45fc0d-33ee-4e43-813c-ddc25ac755f7
-# ╠═27f7a89f-de60-4753-8fd6-73964ae3c600
 # ╟─4a9081f9-df1c-4ed1-a38f-64af8b1c527f
 # ╠═7df066ec-2d70-44b9-809c-3d90bc765890
 # ╠═c50b6262-77ab-486b-8b86-b61ed07e6f50
 # ╠═e7d3f396-a446-485e-9022-77f7ddc73472
-# ╠═62c23af8-c3b6-4226-a665-17d40d126c01
-# ╠═309bee08-7f31-4185-bb89-3f6a1715157a
-# ╠═5024e1ab-1b03-4145-bca8-48a2ab8a0fe1
+# ╠═45385342-ff69-4635-ac12-2a3b3f151ecc
 # ╟─4b1ea454-ff92-4b26-a9ab-dbd6c20599bf
 # ╟─c5861930-a539-4cbb-86f7-dfd25e81f60a
 # ╟─5d99e59e-11d1-4ab0-884d-dfcefbde165c
@@ -1404,6 +1458,7 @@ version = "17.4.0+0"
 # ╠═4a55e6ba-c7ca-4bc9-a37c-962012ea09a9
 # ╟─2bedfb05-b4f9-419e-b07e-33bda10f0855
 # ╟─3bd96954-b28b-42f9-9678-b1cb93bea0b5
+# ╟─855a9981-9860-4e25-9b8f-4a14303bd559
 # ╟─c2f2b913-bc2b-465c-8af2-b659ff3b64de
 # ╟─f611d61e-30a1-11ee-3119-99255be33a07
 # ╟─00000000-0000-0000-0000-000000000001
