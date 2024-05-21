@@ -14,7 +14,21 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ daebeaf7-b7a5-4a29-afd5-19b57a0f37f7
+# ╔═╡ b3f73ba6-07ca-11ef-15eb-895008db2a32
+begin
+	using Distributions
+	using PlotlyLight
+	using PlutoUI
+	md"""
+	(notebook setup)
+	$(PlutoUI.TableOfContents())
+	$(HTML("<style>h1 { padding-top: 200px; }</style>"))
+	$(HTML("<style>h2 { padding-top: 100px; }</style>"))
+	$(HTML("<style>h3 { padding-top: 50px; }</style>"))
+	"""
+end
+
+# ╔═╡ c049e7b0-f3c4-4ee9-a699-f941e5970405
 let
 	using AbstractTrees
 	
@@ -24,106 +38,35 @@ let
 	print_tree(Real)
 end
 
-# ╔═╡ f98b1a2a-89d0-4cb5-8c53-7957ca582a9f
+# ╔═╡ fbba6ab9-3339-4d3f-964b-81e4f625f7e9
 using LinearAlgebra
 
-# ╔═╡ f611d61e-30a1-11ee-3119-99255be33a07
-begin
-	
-	using PlutoUI
-	using PlotlyLight
-	using Cobweb
-	using Cobweb: h
-	using EasyConfig
-	using Distributions
-	using RCall
-	using DataFrames
-	using PlotlyLight
-	using StatsModels
-	using CSV
-	using GLM
-	
-	struct Foldable
-	    title::String
-	    content
-	end
+# ╔═╡ fa88b54f-2e74-474d-a772-e252ac29794d
+using RCall
 
-	vspace= h.div(style="height:20vh")
-	
-	function Base.show(io, mime::MIME"text/html", fld::Foldable)
-	    write(io,"<details><summary>$(fld.title)</summary><p>")
-	    show(io, mime, fld.content)
-	    write(io,"</p></details>")
-	end
+# ╔═╡ de3078e6-7102-4e73-aff2-93a2835967d6
+using DataFrames
 
-	struct TwoColumn
-	    left
-	    right
-		percent_left::Int
-	end
-	
-	function Base.show(io, mime::MIME"text/html", tc::TwoColumn)
-	    write(io, """<div style="display: flex;"><div style="flex: $(tc.percent_left)%;">""")
-	    show(io, mime, tc.left)
-	    write(io, """</div><div style="flex: $(100-tc.percent_left)%;">""")
-	    show(io, mime, tc.right)
-	    write(io, """</div></div>""")
-	end
-
-	md"""
-	# (Notebook Setup)
-	$(PlutoUI.TableOfContents())
-	$(html"
-		<style>
-		pluto-log-dot.Stdout {
-			background: black
-		}
-		pluto-log-dot.Stdout:after {
-			background: black
-		}
-		</style>
-		")
-	"""
-end
-
-# ╔═╡ 28c981d6-30ab-45fd-bc5f-7649eb371894
-md"""# Present: $(html"<button onclick='present()'>Toggle Present Mode</button>")"""
-
-# ╔═╡ 4c4b2682-d008-416e-8898-85fd2250d877
+# ╔═╡ 613d1b35-d482-47ad-bb52-b20af0a6408d
 md"""
-
-$(html"<img style='display:block; margin:auto' src='https://raw.githubusercontent.com/JuliaLang/julia-logo-graphics/master/images/julia-logo-dark.svg' width=300px>")
-
-# Julia for Computational Statisticans
-
-- Dr. Josh Day, *Senior Research Scientist at JuliaHub*
-
-$(html"<img style='display:block; margin:auto; padding-bottom:20px;' src='https://juliahub.com/assets/img/juliahub-color-logo.svg' width=300px>")
-
-> I'm a Statistics PhD (NC State) who now primarily does R&D/innovative software design for government customers.  I maintain many open source Julia packages, notably [OnlineStats](https://github.com/joshday/OnlineStats.jl), a package of parallelizable on-line algorithms for statistics.
-
-- This Pluto notebook is available at [https://github.com/joshday/Talks](https://github.com/joshday/Talks)
-
-
+# Useful Link: [Julia Cheatsheet](https://cheatsheet.juliadocs.org)
 """
 
-# ╔═╡ f259dc87-eeea-4255-8380-de51e87e6c7a
+# ╔═╡ eb817e23-6149-470e-ba99-e07ddfaf74e1
 md"""
 # Why Julia?
 
 ##### Why would we want/need another language?
 
-!!! warning "Julia Really is Nice"
+!!! info "Julia Really is Nice"
 	- Frankly I'm surprised that Julia has had little traction among (computational) statisticians.
 	- I feel like learning Julia gave me super powers for my computationally-heavy research.
-	- **Find me later if you'd like more details!**
-
----
-
-#### Three Claims About Why Julia is Great:
 """
 
-# ╔═╡ b94b68a7-aeab-4cb6-bc48-4ac27be1ee7f
+# ╔═╡ b84af093-7737-4250-9777-c6d37a7a6bc1
+md"# Three Claims About Julia"
+
+# ╔═╡ a7b9de96-b0ef-432d-8e8c-410916f900b1
 md"""
 ## Claim 1
 
@@ -143,7 +86,7 @@ md"""
 		##### Much of Julia is written...in Julia.
 """
 
-# ╔═╡ 3fcf4326-a441-4666-8bca-068a3956f228
+# ╔═╡ 2614ee96-20c6-459c-b599-1891bbb644b5
 md"""
 ## Claim 2
 
@@ -159,7 +102,13 @@ md"""
 
 """
 
-# ╔═╡ 0d486c3b-66d7-4b91-b8f6-e534a84db3f1
+# ╔═╡ 1814c337-2379-466c-97df-dbee6362ce5c
+md"""
+!!! info
+	In Academia, "bring ideas to production" could simply mean "I want my simulations to run in an hour, not over the weekend"
+"""
+
+# ╔═╡ 630a7f0f-b5df-496e-a4c7-4c7d3debf8bd
 md"""
 ## Claim 3
 
@@ -177,31 +126,31 @@ md"""
 
 	> I'm going to use a hypothetical language called Blub...
 	> 
-	> As long as our hypothetical Blub programmer is looking down the power continuum, they know they're looking down. Languages less powerful than Blub are obviously less powerful, because they're missing features our programmer is used to. But **when our programmer looks up the power continuum, they don't realize they're looking up. What they see are merely weird languages.** They probably considers them about equivalent in power to Blub, but with all this other hairy stuff thrown in as well. Blub is good enough for them, because they think in Blub.
+	> As long as our hypothetical Blub programmer is looking down the power continuum, they know they're looking down. Languages less powerful than Blub are obviously less powerful, because they're missing features our programmer is used to. But **when our programmer looks up the power continuum, they don't realize they're looking up. What they see are merely weird languages.** They probably consider them about equivalent in power to Blub, but with all this other hairy stuff thrown in as well. Blub is good enough for them, because they think in Blub.
 	> - Paraphrased from Paul Graham's ["Beating the Averages" Essay](http://www.paulgraham.com/avg.html) (emphasis added)
 """
 
-# ╔═╡ ec35cc71-9656-4a4f-b854-d69b3abc3851
+# ╔═╡ 65bb64e2-194b-41b5-8228-afc90c165497
 md"""
 # Julia Highlights
 """
 
-# ╔═╡ 8fcfaeca-eab8-4e30-ac80-5bf77e4d8f97
+# ╔═╡ 47fead9c-9bca-49db-984c-20988edd562c
 md"""
 ## Performance
 
 $(html"<img style='background:white; border-radius:4px;' src='https://julialang.org/assets/images/benchmarks.svg'>")
 """
 
-# ╔═╡ 4f56158c-5e53-4dcb-a62b-6a0fb7bc6d1b
+# ╔═╡ 32661546-6615-4782-93dd-94cc18554e37
 md"""
 !!! success "Quick Story"
-	- At my first JuliaCon (2016), I saw Doug Bates give a 10 minute lightning talk about `MixedModels.jl`.
+	- At my first JuliaCon (2016), I saw Doug Bates (of `lme4` fame) give a 10 minute lightning talk about `MixedModels.jl`.
 	- He'd translated a model from R to Julia that took "most of the day" to fit  in his "best-written R code".
-	- He ran live code and fit the model within his 10 minute talk.
+	- He coded live and fit the model within his 10 minute talk.
 """
 
-# ╔═╡ be5c6bcd-fcd0-4637-ba74-3db56aa70458
+# ╔═╡ b9589e8f-71c5-4d52-805d-d745d778bcc7
 md"""
 ## Automatic Specialization
 
@@ -218,15 +167,15 @@ md"""
 	- The next time you call a compiled method you don't need to recompile it, e.g. `f(4,5)`.
 """
 
-# ╔═╡ 3754ba52-4617-4313-bcc4-d86bd2dc10a8
+# ╔═╡ e1e100c6-5f85-4c73-bd93-f8d5fca6d0ff
 md"""
 !!! info "Specialized code \"for free\""
 	You get *specialized* code without telling Julia about the types of inputs.
 """
 
-# ╔═╡ f3aa35ba-d7fe-4e48-a8ba-76f760ec6b52
+# ╔═╡ 33092efb-687e-4601-8a5b-92ce52a85ea1
 md"""
-!!! note "A more complicated example"
+!!! note "A more complicated example (think about Sapir-Worf)"
 
 	Finding quantiles with Newton's Method for finding roots:
 	
@@ -238,7 +187,7 @@ md"""
 
 """
 
-# ╔═╡ 7f1be803-c01c-4223-bf63-19c5b5a4d781
+# ╔═╡ 891ce1f8-efd7-4fcb-ac98-516c2fb01398
 function myquantile(dist, q)
     x = mean(dist)
     for i in 1:20
@@ -247,14 +196,14 @@ function myquantile(dist, q)
     x
 end
 
-# ╔═╡ e43a9b9f-369f-44a4-804f-f50b64fb49fe
+# ╔═╡ 51a426b8-5ab7-4887-8ae5-f9f153324efe
 md"""
 #### Does it Work?
 
-$(@bind dist Select([Normal(), Gamma(5,1), Uniform(0,1), Beta(7,2), nothing]))
+$(@bind dist Select([nothing, Normal(), Gamma(5,1), Uniform(0,1), Beta(7,2)]))
 """
 
-# ╔═╡ 77230db4-dfaa-4559-a054-328931a0bb56
+# ╔═╡ 6ebb149b-9f16-4615-ba23-7e01d8d9e46b
 let
 	rng = .01:.01:.99
 	if isnothing(dist) 
@@ -267,11 +216,13 @@ let
 			name="myquantile"
 		)
 		p.layout.title=string(dist)
+		p.layout.xaxis.title = "x"
+		p.layout.yaxis.title = "P(X) < x"
 		p
 	end
 end
 
-# ╔═╡ 44d794c1-fa56-4d71-950d-da8c77f926ea
+# ╔═╡ 9eee6aa0-4710-444e-b320-953c3b4277cf
 md"""
 ## Type System/Multiple Dispatch
 
@@ -286,7 +237,7 @@ md"""
 	- Subtypes of `Real`:
 """
 
-# ╔═╡ a724cfe9-9b7c-43c8-80a0-ce87325cf327
+# ╔═╡ 324a0b89-f160-42b3-88b4-ce7e27298236
 md"""
 !!! info "Type Annotations"
 	*Type Annotations* do not affect performance. e.g.
@@ -305,7 +256,7 @@ md"""
 	```
 	2. **(Multiple) Dispatch**.  E.g.
 
-	- Function has a different meaning depending on the type:
+	- Function has a different meaning (or optimization) depending on the type:
 
 	```julia
 	half(x::Number) = x / 2 
@@ -314,38 +265,38 @@ md"""
 	```
 """
 
-# ╔═╡ 4fb00db2-ea4b-4e21-a1ae-02fc21bcfc3c
+# ╔═╡ efd5cdf5-7961-4747-8a2e-307f6aba60f3
 begin 
 	half(x::Number) = x / 2 
 
     half(x) = x[1:floor(Int, length(x) / 2)]
 end
 
-# ╔═╡ 8dc68ace-4f1c-44af-a112-571d5e5ae6f3
+# ╔═╡ 8c68f965-493b-4465-941c-9cd10629de2d
 half(1)
 
-# ╔═╡ 97bd1cb2-fe76-4d44-8738-a3750d0f19a6
+# ╔═╡ cafbc4ef-a007-4588-ba30-ff0fceae19ae
 half(1 + 2im)
 
-# ╔═╡ 892abcee-4e17-4b1d-80eb-ffa5d006b6ff
+# ╔═╡ e410a3d8-7f8b-46ab-988b-06432bf9c5bd
 half("ABCDEFG")
 
-# ╔═╡ 1a4e61a3-7d58-4348-a409-550b56d93810
+# ╔═╡ 9c093d57-dffc-45ef-a3bc-68b69ab17e80
 half(1:10)
 
-# ╔═╡ b7f9c148-68a7-4b9f-95ad-17c3e6c46dff
+# ╔═╡ 02d38202-ef44-44d3-8780-edd3217c3133
 md"""
 ### Multiple Dispatch Example: `Matrix` vs. `Diagonal`
 """
 
-# ╔═╡ 05398982-680e-4b8b-baa7-52e66e587798
+# ╔═╡ 8a2f5a79-3229-4a73-afa3-70cfe0666e65
 md"""
 !!! note "Note: Dispatch and Multiple Dispatch"
     - **Dispatch** is the choice of which method to execute when a function is applied. 
 	- **Multiple Dispatch** is dispatch based on the types of *all* arguments to a function.
 """
 
-# ╔═╡ 79348898-63ae-4e8b-8ed9-d030ac6537b2
+# ╔═╡ a6d3bd52-5228-42eb-9a1c-f99bccd4951e
 let 
 	# `Diagonal` doesn't store the off-diagonal elements
 	x = Diagonal(randn(1000))
@@ -361,13 +312,13 @@ let
 	@info "Dense matrix multiply is $(t2/ t1) times slower than Diagonal."
 end
 
-# ╔═╡ 65180941-5ef9-4cf1-a7e1-f87034e5863e
+# ╔═╡ 2a960f22-0d11-49fe-9f4b-db5a21afcdec
 md"""
 !!! note "How does this work?"
 	- The `*(::Diagonal, ::Vector)` method is faster than the `*(::Matrix, ::Vector)` method.
 """
 
-# ╔═╡ d30def63-efdf-4ff1-9936-0d4381019647
+# ╔═╡ 3f2521e9-81ac-4bb9-8c74-e1961c090e50
 md"""
 !!! note "How MixedModels.jl uses Multiple Dispatch"
 	#### MixedModels.jl takes great advantage of this!
@@ -380,7 +331,7 @@ md"""
 	- It just needs to rely on the methods (e.g. `*`, `+`) that are optimized for its `AbstractMatrix` types.
 """
 
-# ╔═╡ 908f7907-2bb9-4b76-a2c8-864517d399cb
+# ╔═╡ 6f0d1339-d1f2-4344-bb5a-465ab2a49300
 md"""
 !!! note "Related: Julia Packages are Often "Composable\""
 	- I.e. they work together without an explicit dependency.
@@ -390,7 +341,7 @@ md"""
 	- Now you realize your input is a block matrix, so you use **BlockArrays.jl** for a free speedup.
 """
 
-# ╔═╡ 9f45fc0d-33ee-4e43-813c-ddc25ac755f7
+# ╔═╡ b59871d8-0ce1-4bbd-b698-b461ffef5561
 md"""
 ## Broadcasting
 
@@ -432,7 +383,7 @@ abs.(x)
 	```
 """
 
-# ╔═╡ 4a9081f9-df1c-4ed1-a38f-64af8b1c527f
+# ╔═╡ 7a8a9af0-2f7a-4282-b1df-ef5aea865a41
 md"""
 ## Metaprogramming/Macros
 
@@ -448,29 +399,47 @@ md"""
 	- `@mymacro`'s input here is `Expr(:call, :+, 1, 2)`
 """
 
-# ╔═╡ 7df066ec-2d70-44b9-809c-3d90bc765890
+# ╔═╡ f747b27a-658a-4692-9e8b-ec4bdf40f1aa
 dump(Meta.parse("1 + 1"))
 
-# ╔═╡ c50b6262-77ab-486b-8b86-b61ed07e6f50
+# ╔═╡ fcd90d06-bce5-442f-89a4-d049a1b3c826
 # Change second argument of infix operator to `100`
 macro mymacro(ex)
 	ex.args[end] = 100
 	return ex
 end
 
-# ╔═╡ e7d3f396-a446-485e-9022-77f7ddc73472
+# ╔═╡ 22ec7170-ed1c-4d92-9a30-c6b9cab84bca
 @mymacro 1 + 2
 
-# ╔═╡ 45385342-ff69-4635-ac12-2a3b3f151ecc
+# ╔═╡ a046bd56-40a7-4130-bbb4-2ed28ee9d103
 @mymacro 2 * "This will get replaced"
 
-# ╔═╡ 4b1ea454-ff92-4b26-a9ab-dbd6c20599bf
+# ╔═╡ 55e31504-27ae-427d-92d5-0e942c9bb8e5
 md"""
 !!! note
-	R's "Non-standard evaluation" makes every function macro-ish.
+	R's "Non-standard evaluation" makes every function macro-like.
 """
 
-# ╔═╡ c5861930-a539-4cbb-86f7-dfd25e81f60a
+# ╔═╡ 97c70ec5-93b7-4503-9de9-67db304d3eb7
+md"""
+# Mutation
+
+!!! note "\"Pass by Sharing\""
+	In Julia, function arguments are passed "by sharing" (AKA "by reference") and a function can change the value of an argument.  By convention, mutating functions end with `!`. 
+
+	Note that in R, arguments are passed "by copy", with the exception of a few special data types.
+"""
+
+# ╔═╡ e4498937-6b26-4e74-a66c-94f74694f5b7
+let 
+	x = [1, 2]
+	push!(x, 3)  # Add `3` to the end
+	popfirst!(x)  # Remove `1` from the start
+	x
+end
+
+# ╔═╡ cd4e9a48-eee4-4d0d-b0f9-5359bf92041f
 md"""
 ## Reproducibility
 
@@ -486,115 +455,19 @@ md"""
 
 """
 
-# ╔═╡ 5d99e59e-11d1-4ab0-884d-dfcefbde165c
-md"""
-# Learnings from R
-
-!!! note
-	In many cases
-
-	> "lessons learned from R"
-
-	is really
-
-	> "lessons learned from Doug"
-
-	or 
-
-	> "code contributions from Doug"
-"""
-
-# ╔═╡ a0d6bcd3-eff8-492c-8983-00974ec5eea4
-begin
-	screenshots = joinpath.(Ref("github_screenshots"), readdir("github_screenshots"));
-	md"""
-	$(@bind timer Clock(1))
-
-	#### A sample of comments in GitHub issues:
-	"""
-end
-
-# ╔═╡ 678a6bfc-6758-4ab3-8bc4-c3eb8fecee3b
-begin
-	i = (timer % length(screenshots)) + 1
-	LocalResource(screenshots[i], :height => "40px")
-end
-
-# ╔═╡ 0f6adb16-e9d5-47cf-9457-6dda141ec51a
-md"""
-!!! note "The Influence of Dr. Doug Bates"
-	Doug provided the [JuliaStats](https://github.com/JuliaStats) community with a plethora of knowledge about the inner workings of R (as well as why certain decisions were made).
-
-	A common flow:
-	1. What should Julia do about X?
-	2. Well what does R do?
-	3. R does this.  Why?
-	4. Ask Doug
-"""
-
-# ╔═╡ 67d27cda-4799-4762-b470-19de5708538b
-md"""
-## What Julia has borrowed from R
-"""
-
-# ╔═╡ 75bba6bd-2060-4fbe-9b62-d6df3e4c24ad
-md"""
-!!! highlight "1) Formula syntax"
-	R's formula syntax is great.
-
-	- Julia doesn't use R's "non-standard evaluation".
-	- In order to access an expression, we need macros:
-
-	```julia
-	using StatsModels 
-
-	@formula y ~ 1 + x
-	```
-"""
-
-# ╔═╡ e69b0fe5-ab03-466d-8afa-74d35d081358
-md"""
-!!! warn "2) The core of fitting Generalized Linear Models"
-	- Many of the comments above come from **GLM.jl**.
-	- If you squint, the Julia code looks like R.
-
-	```julia
-	url = "https://cdn.jsdelivr.net/gh/allisonhorst/palmerpenguins@433439c8b013eff3d36c847bb7a27fa0d7e353d8/inst/extdata/penguins.csv"
-	
-	penguins = CSV.read(read(download(url)), DataFrame, missingstring=["NA"])
-	
-	lm(@formula(bill_length_mm ~ 1 + island), penguins)
-	```
-"""
-
-# ╔═╡ a75ece9b-d89b-43ae-af82-24c0d79135d9
-let
-	url = "https://cdn.jsdelivr.net/gh/allisonhorst/palmerpenguins@433439c8b013eff3d36c847bb7a27fa0d7e353d8/inst/extdata/penguins.csv";
-	penguins = CSV.read(read(download(url)), DataFrame, missingstring=["NA"]);
-	lm(@formula(bill_length_mm ~ 1 + island), penguins)
-end
-
-# ╔═╡ de234030-70c0-408b-9646-ec9c3d237994
-md"""
-!!! highlight "3) The rest of the language"
-	- **RCall.jl** provides fantastic calling-R-from-Julia interop.
-	- The time you've spent learning `lattice`/`ggplot2`/etc. doesn't go to waste when you try Julia.
-	  - If I recall correctly, Doug wrote **RCall** for this very reason.
-"""
-
-# ╔═╡ 38634e92-b813-4823-bbe0-6aedbffbedb2
+# ╔═╡ 19b06d54-72c1-423c-9039-446fee67aed5
 md"""
 # Using R from Julia
 """
 
-# ╔═╡ 6a62a82c-320c-4786-b846-b7056be8b9be
+# ╔═╡ fd5f7245-e21e-4cbd-a15e-41609de683e1
 md"""
 !!! note
 	- Plots from R don't automatically diplay in Pluto.
 	- Good opportunity to write a macro:
 """
 
-# ╔═╡ 3c3d69d0-3874-453c-9de1-ce3a2a93f663
+# ╔═╡ ea4939cc-cdac-4c36-9b57-7c3100fc1e2e
 macro ggplot2(ex)
 	nm = tempname() * ".png"
 	s = string(ex)
@@ -608,14 +481,14 @@ macro ggplot2(ex)
 	end)
 end
 
-# ╔═╡ ed3adc2e-28ca-489c-a5a3-ca425f92e28f
+# ╔═╡ edc198d0-95ff-4eea-a0d4-57336092bfaf
 begin
 	R"library(ggplot2)"  # Use the `R` string macro to load ggplot2
 	
 	@ggplot2 ggplot(mpg, aes(displ, hwy, colour = class)) + geom_point()
 end
 
-# ╔═╡ 0ad9751a-d0fd-4ec1-8e8e-08d16868990a
+# ╔═╡ 03aed7c0-dc38-45dd-b965-01316bfdf947
 md"""
 !!! note "Passing variables from Julia to R"
 	You can pass Julia variables to R using:
@@ -623,20 +496,20 @@ md"""
 	  2. The `@rput` macro.
 """
 
-# ╔═╡ 4f2929bb-8a82-4fe5-8a09-70e47bdc408a
+# ╔═╡ d181b7c8-9f69-4786-b643-4a2d0aa14f3e
 julia_data = randn(1000)
 
-# ╔═╡ 3fe50422-12ed-44d8-a068-7eb60b846eda
+# ╔═╡ 19b8232d-16e1-4b22-805e-16ffc17c9ae0
 @ggplot2 ggplot(mapping=aes($julia_data)) + geom_histogram()
 
-# ╔═╡ 38b373ca-b5c4-407a-961a-a38c0824423e
+# ╔═╡ 6a4fbd54-d5f2-4cc1-a58a-6d28a535de1a
 md"""
 !!! note "Retrieve values from R"
 	- Similar to `@rput`, we have `@rget`.
 	- Type conversions are automatic for many things, but you can write your own custom conversions as well.
 """
 
-# ╔═╡ 4a55e6ba-c7ca-4bc9-a37c-962012ea09a9
+# ╔═╡ f15bf377-6b8c-4b53-8b9f-ec438144ff9b
 let 
 	R"data <- mpg"
 	
@@ -645,83 +518,24 @@ let
 	describe(data)
 end
 
-# ╔═╡ 2bedfb05-b4f9-419e-b07e-33bda10f0855
-md"""
-# Should you try Julia?
-"""
-
-# ╔═╡ 3bd96954-b28b-42f9-9678-b1cb93bea0b5
-md"""
-!!! yes "Yes!  Particularly if:"
-	- **Any of the three claims at the top resonated with you.**
-	- You develop novel methods/algorithms.
-	- You care about performance.
-	  - And you want a cleaner workflow than R + RCpp.
-	- You have time to tinker with Julia while your R code is running.
-	- You want to use some of the state-of-the-art packages in Julia.
-"""
-
-# ╔═╡ 855a9981-9860-4e25-9b8f-4a14303bd559
-md"""
-!!! info "Packages to Look Into"
-	- **DifferentialEquations**: Multi-language suite for high-performance solvers of differential equations and scientific machine learning (SciML) components
-	- **ModelingToolkit**: An acausal modeling framework for automatically parallelized scientific machine learning (SciML) in Julia.
-	- **Pluto** Simple, reactive programming environment for Julia.
-	- **Turing**: Bayesian inference via probabilistic programming.
-	- **Makie** Interactive visualizations and powerful plotting in Julia.
-	- **JuMP**: Modeling language for Mathematical Optimization (linear, mixed-integer, conic, semidefinite, nonlinear).
-	- **MLJ**: A Julia machine learning framework.
-	- **OnlineStats**: Single-pass algorithms for statistics.
-	- **Graphs**: An optimized graphs package for Julia.
-	- **Javis**: Julia Animations and Visualizations.
-"""
-
-# ╔═╡ c2f2b913-bc2b-465c-8af2-b659ff3b64de
-md"""
-# Thank You!
-
-$(html"<img style='display:block; margin:auto' src='https://raw.githubusercontent.com/JuliaLang/julia-logo-graphics/master/images/julia-logo-dark.svg' width=200px>")
-
----
-
-- Find me on GitHub: [`@joshday`](https://github.com/joshday)
-- There's too much to talk about!  Find me after the session if you'd like to talk more.
-
-#### Julia Resources
-
-- [https://discourse.julialang.org](https://discourse.julialang.org)
-- [https://julialang.slack.com](https://julialang.slack.com)
-- [Official Julia Documentation](https://docs.julialang.org/en/v1/)
-"""
-
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
-CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
-Cobweb = "ec354790-cf28-43e8-bb59-b484409b7bad"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
-EasyConfig = "acab07b0-f158-46d4-8913-50acef6d41fe"
-GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PlotlyLight = "ca7969ec-10b3-423e-8d99-40f33abb42bf"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 RCall = "6f49c342-dc21-5d91-9882-a32aef131414"
-StatsModels = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
 
 [compat]
-AbstractTrees = "~0.4.4"
-CSV = "~0.10.11"
-Cobweb = "~0.5.2"
+AbstractTrees = "~0.4.5"
 DataFrames = "~1.6.1"
-Distributions = "~0.25.98"
-EasyConfig = "~0.1.15"
-GLM = "~1.8.3"
-PlotlyLight = "~0.7.3"
-PlutoUI = "~0.7.52"
-RCall = "~0.13.15"
-StatsModels = "~0.7.2"
+Distributions = "~0.25.108"
+PlotlyLight = "~0.9.1"
+PlutoUI = "~0.7.59"
+RCall = "~0.14.1"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -730,18 +544,24 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.3"
 manifest_format = "2.0"
-project_hash = "ce6bf84be996f535d76ff7d04eceeac30a0783f1"
+project_hash = "842214971ee1312ba3561e26ba0a3a0e984332a3"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
-git-tree-sha1 = "91bd53c39b9cbfb5ef4b015e8b582d344532bd0a"
+git-tree-sha1 = "6e1d2a35f2f90a4bc7c2ed98079b2ba09c35b83a"
 uuid = "6e696c72-6542-2067-7265-42206c756150"
-version = "1.2.0"
+version = "1.3.2"
 
 [[deps.AbstractTrees]]
-git-tree-sha1 = "faa260e4cb5aba097a73fab382dd4b5819d8ec8c"
+git-tree-sha1 = "2d9c9a55f9c93e8887ad391fbae72f8ef55e1177"
 uuid = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
-version = "0.4.4"
+version = "0.4.5"
+
+[[deps.AliasTables]]
+deps = ["Random"]
+git-tree-sha1 = "07591db28451b3e45f4c0088a2d5e986ae5aa92d"
+uuid = "66dad0bd-aa9a-41b7-9441-69ab47430ed8"
+version = "1.1.1"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -752,12 +572,6 @@ uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
-
-[[deps.CSV]]
-deps = ["CodecZlib", "Dates", "FilePathsBase", "InlineStrings", "Mmap", "Parsers", "PooledArrays", "PrecompileTools", "SentinelArrays", "Tables", "Unicode", "WeakRefStrings", "WorkerUtilities"]
-git-tree-sha1 = "44dbf560808d49041989b8a96cae4cffbeb7966a"
-uuid = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
-version = "0.10.11"
 
 [[deps.Calculus]]
 deps = ["LinearAlgebra"]
@@ -784,28 +598,22 @@ version = "0.10.8"
     StructTypes = "856f2bd8-1eba-4b0a-8007-ebc267875bd4"
 
 [[deps.Cobweb]]
-deps = ["DefaultApplication", "Markdown", "OrderedCollections", "Random", "Scratch"]
-git-tree-sha1 = "49e3de5be079f856697995001c587db8605506a9"
+deps = ["DefaultApplication", "OrderedCollections", "Scratch"]
+git-tree-sha1 = "1d38f9c609b1d8b33319911b4f016da29e33a776"
 uuid = "ec354790-cf28-43e8-bb59-b484409b7bad"
-version = "0.5.2"
-
-[[deps.CodecZlib]]
-deps = ["TranscodingStreams", "Zlib_jll"]
-git-tree-sha1 = "02aa26a4cf76381be7f66e020a3eddeb27b0a092"
-uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
-version = "0.7.2"
+version = "0.6.1"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
-git-tree-sha1 = "eb7f0f8307f71fac7c606984ea5fb2817275d6e4"
+git-tree-sha1 = "b10d0b65641d57b8b4d5e234446582de5047050d"
 uuid = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
-version = "0.11.4"
+version = "0.11.5"
 
 [[deps.Compat]]
-deps = ["UUIDs"]
-git-tree-sha1 = "e460f044ca8b99be31d35fe54fc33a5c33dd8ed7"
+deps = ["TOML", "UUIDs"]
+git-tree-sha1 = "c955881e3c981181362ae4088b35995446298b80"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "4.9.0"
+version = "4.14.0"
 weakdeps = ["Dates", "LinearAlgebra"]
 
     [deps.Compat.extensions]
@@ -818,9 +626,9 @@ version = "1.1.1+0"
 
 [[deps.Conda]]
 deps = ["Downloads", "JSON", "VersionParsing"]
-git-tree-sha1 = "8c86e48c0db1564a1d49548d3515ced5d604c408"
+git-tree-sha1 = "51cab8e982c5b598eea9c8ceaced4b58d9dd37c9"
 uuid = "8f4d0f93-b110-5947-807f-2305c1781a2d"
-version = "1.9.1"
+version = "1.10.0"
 
 [[deps.Crayons]]
 git-tree-sha1 = "249fe38abf76d48563e2f4556bebd215aa317e15"
@@ -828,9 +636,9 @@ uuid = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
 version = "4.1.1"
 
 [[deps.DataAPI]]
-git-tree-sha1 = "8da84edb865b0b5b0100c0666a9bc9a0b71c553c"
+git-tree-sha1 = "abe83f3a2f1b857aac70ef8b269080af17764bbe"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
-version = "1.15.0"
+version = "1.16.0"
 
 [[deps.DataFrames]]
 deps = ["Compat", "DataAPI", "DataStructures", "Future", "InlineStrings", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrecompileTools", "PrettyTables", "Printf", "REPL", "Random", "Reexport", "SentinelArrays", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
@@ -840,9 +648,9 @@ version = "1.6.1"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
-git-tree-sha1 = "cf25ccb972fec4e4817764d01c82386ae94f77b4"
+git-tree-sha1 = "1d0a14036acb104d9e89698bd408f63ab58cdc82"
 uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
-version = "0.18.14"
+version = "0.18.20"
 
 [[deps.DataValueInterfaces]]
 git-tree-sha1 = "bfc1187b79289637fa0ef6d4436ebdfe6905cbd6"
@@ -860,18 +668,20 @@ uuid = "3f0dd361-4fe0-5fc6-8523-80b14ec94d85"
 version = "1.1.0"
 
 [[deps.Distributions]]
-deps = ["FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns", "Test"]
-git-tree-sha1 = "e76a3281de2719d7c81ed62c6ea7057380c87b1d"
+deps = ["AliasTables", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns"]
+git-tree-sha1 = "22c595ca4146c07b16bcf9c8bea86f731f7109d2"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.98"
+version = "0.25.108"
 
     [deps.Distributions.extensions]
     DistributionsChainRulesCoreExt = "ChainRulesCore"
     DistributionsDensityInterfaceExt = "DensityInterface"
+    DistributionsTestExt = "Test"
 
     [deps.Distributions.weakdeps]
     ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
     DensityInterface = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
+    Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [[deps.DocStringExtensions]]
 deps = ["LibGit2"]
@@ -892,24 +702,24 @@ version = "0.6.8"
 
 [[deps.EasyConfig]]
 deps = ["JSON3", "OrderedCollections", "StructTypes"]
-git-tree-sha1 = "d22224e636afcb14de0cb5a0a7039095e2238aee"
+git-tree-sha1 = "11fa8ecd53631b01a2af60e16795f8b4731eb391"
 uuid = "acab07b0-f158-46d4-8913-50acef6d41fe"
-version = "0.1.15"
-
-[[deps.FilePathsBase]]
-deps = ["Compat", "Dates", "Mmap", "Printf", "Test", "UUIDs"]
-git-tree-sha1 = "e27c4ebe80e8699540f2d6c805cc12203b614f12"
-uuid = "48062228-2e41-5def-b9a4-89aafe57970f"
-version = "0.9.20"
+version = "0.1.16"
 
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 
 [[deps.FillArrays]]
-deps = ["LinearAlgebra", "Random", "SparseArrays", "Statistics"]
-git-tree-sha1 = "f372472e8672b1d993e93dada09e23139b509f9e"
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "57f08d5665e76397e96b168f9acc12ab17c84a68"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
-version = "1.5.0"
+version = "1.10.2"
+weakdeps = ["PDMats", "SparseArrays", "Statistics"]
+
+    [deps.FillArrays.extensions]
+    FillArraysPDMatsExt = "PDMats"
+    FillArraysSparseArraysExt = "SparseArrays"
+    FillArraysStatisticsExt = "Statistics"
 
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
@@ -921,12 +731,6 @@ version = "0.8.4"
 deps = ["Random"]
 uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 
-[[deps.GLM]]
-deps = ["Distributions", "LinearAlgebra", "Printf", "Reexport", "SparseArrays", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns", "StatsModels"]
-git-tree-sha1 = "97829cfda0df99ddaeaafb5b370d6cab87b7013e"
-uuid = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
-version = "1.8.3"
-
 [[deps.HypergeometricFunctions]]
 deps = ["DualNumbers", "LinearAlgebra", "OpenLibm_jll", "SpecialFunctions"]
 git-tree-sha1 = "f218fe3736ddf977e0e772bc9a586b2383da2685"
@@ -935,21 +739,21 @@ version = "0.3.23"
 
 [[deps.Hyperscript]]
 deps = ["Test"]
-git-tree-sha1 = "8d511d5b81240fc8e6802386302675bdf47737b9"
+git-tree-sha1 = "179267cfa5e712760cd43dcae385d7ea90cc25a4"
 uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
-version = "0.0.4"
+version = "0.0.5"
 
 [[deps.HypertextLiteral]]
 deps = ["Tricks"]
-git-tree-sha1 = "c47c5fa4c5308f27ccaac35504858d8914e102f9"
+git-tree-sha1 = "7134810b1afce04bbc1045ca1985fbe81ce17653"
 uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
-version = "0.9.4"
+version = "0.9.5"
 
 [[deps.IOCapture]]
 deps = ["Logging", "Random"]
-git-tree-sha1 = "d75853a0bdbfb1ac815478bacd89cd27b550ace6"
+git-tree-sha1 = "8b72179abc660bfab5e28472e019392b97d0985c"
 uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
-version = "0.2.3"
+version = "0.2.4"
 
 [[deps.InlineStrings]]
 deps = ["Parsers"]
@@ -977,10 +781,10 @@ uuid = "82899510-4779-5014-852e-03e436cf321d"
 version = "1.0.0"
 
 [[deps.JLLWrappers]]
-deps = ["Preferences"]
-git-tree-sha1 = "abc9885a7ca2052a736a600f7fa66209f96506e1"
+deps = ["Artifacts", "Preferences"]
+git-tree-sha1 = "7e5d6779a1e09a36db2a7b6cff50942a0a7d0fca"
 uuid = "692b3bcd-3c85-4b1f-b108-f13ce0eb3210"
-version = "1.4.1"
+version = "1.5.0"
 
 [[deps.JSON]]
 deps = ["Dates", "Mmap", "Parsers", "Unicode"]
@@ -990,14 +794,20 @@ version = "0.21.4"
 
 [[deps.JSON3]]
 deps = ["Dates", "Mmap", "Parsers", "PrecompileTools", "StructTypes", "UUIDs"]
-git-tree-sha1 = "95220473901735a0f4df9d1ca5b171b568b2daa3"
+git-tree-sha1 = "eb3edce0ed4fa32f75a0a11217433c31d56bd48b"
 uuid = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
-version = "1.13.2"
+version = "1.14.0"
+
+    [deps.JSON3.extensions]
+    JSON3ArrowExt = ["ArrowTypes"]
+
+    [deps.JSON3.weakdeps]
+    ArrowTypes = "31f734f8-188a-4ce0-8406-c8a06bd891cd"
 
 [[deps.LaTeXStrings]]
-git-tree-sha1 = "f2355693d6778a178ade15952b7ac47a4ff97996"
+git-tree-sha1 = "50901ebc375ed41dbf8058da26f9de442febbbec"
 uuid = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
-version = "1.3.0"
+version = "1.3.1"
 
 [[deps.LibCURL]]
 deps = ["LibCURL_jll", "MozillaCACerts_jll"]
@@ -1032,9 +842,9 @@ uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.LogExpFunctions]]
 deps = ["DocStringExtensions", "IrrationalConstants", "LinearAlgebra"]
-git-tree-sha1 = "c3ce8e7420b3a6e071e0fe4745f5d4300e37b13f"
+git-tree-sha1 = "18144f3e9cbe9b15b070288eef858f71b291ce37"
 uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
-version = "0.3.24"
+version = "0.3.27"
 
     [deps.LogExpFunctions.extensions]
     LogExpFunctionsChainRulesCoreExt = "ChainRulesCore"
@@ -1065,9 +875,9 @@ version = "2.28.2+1"
 
 [[deps.Missings]]
 deps = ["DataAPI"]
-git-tree-sha1 = "f66bdc5de519e8f8ae43bdc598782d35a25b1272"
+git-tree-sha1 = "ec4f7fbeab05d7747bdf98eb74d130a2a2ed298d"
 uuid = "e1d29d7a-bbdc-5cf2-9ac0-f12de2c33e28"
-version = "1.1.0"
+version = "1.2.0"
 
 [[deps.Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
@@ -1103,21 +913,21 @@ uuid = "efe28fd5-8261-553b-a9e1-b2916fc3738e"
 version = "0.5.5+0"
 
 [[deps.OrderedCollections]]
-git-tree-sha1 = "2e73fe17cac3c62ad1aebe70d44c963c3cfdc3e3"
+git-tree-sha1 = "dfdf5519f235516220579f949664f1bf44e741c5"
 uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
-version = "1.6.2"
+version = "1.6.3"
 
 [[deps.PDMats]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "67eae2738d63117a196f497d7db789821bce61d1"
+git-tree-sha1 = "949347156c25054de2db3b166c52ac4728cbad65"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
-version = "0.11.17"
+version = "0.11.31"
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
-git-tree-sha1 = "716e24b21538abc91f6205fd1d8363f39b442851"
+git-tree-sha1 = "8489905bcdbcfac64d1daa51ca07c0d8f0283821"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.7.2"
+version = "2.8.1"
 
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
@@ -1125,40 +935,40 @@ uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 version = "1.10.0"
 
 [[deps.PlotlyLight]]
-deps = ["Artifacts", "Cobweb", "DefaultApplication", "Downloads", "EasyConfig", "JSON3", "Random", "Scratch", "StructTypes"]
-git-tree-sha1 = "dc3346512c0cb475b578825e66bffe53b77d6fec"
+deps = ["Artifacts", "Cobweb", "Downloads", "EasyConfig", "JSON3", "REPL", "Random", "StructTypes"]
+git-tree-sha1 = "5684d34d28ca87ef546a6cb9646d53c13f93a8ea"
 uuid = "ca7969ec-10b3-423e-8d99-40f33abb42bf"
-version = "0.7.3"
+version = "0.9.1"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
-git-tree-sha1 = "e47cd150dbe0443c3a3651bc5b9cbd5576ab75b7"
+git-tree-sha1 = "ab55ee1510ad2af0ff674dbcced5e94921f867a9"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.52"
+version = "0.7.59"
 
 [[deps.PooledArrays]]
 deps = ["DataAPI", "Future"]
-git-tree-sha1 = "a6062fe4063cdafe78f4a0a81cfffb89721b30e7"
+git-tree-sha1 = "36d8b4b899628fb92c2749eb488d884a926614d3"
 uuid = "2dfb63ee-cc39-5dd5-95bd-886bf059d720"
-version = "1.4.2"
+version = "1.4.3"
 
 [[deps.PrecompileTools]]
 deps = ["Preferences"]
-git-tree-sha1 = "9673d39decc5feece56ef3940e5dafba15ba0f81"
+git-tree-sha1 = "5aa36f7049a63a1528fe8f7c3f2113413ffd4e1f"
 uuid = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
-version = "1.1.2"
+version = "1.2.1"
 
 [[deps.Preferences]]
 deps = ["TOML"]
-git-tree-sha1 = "7eb1686b4f04b82f96ed7a4ea5890a4f0c7a09f1"
+git-tree-sha1 = "9306f6085165d270f7e3db02af26a400d580f5c6"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
-version = "1.4.0"
+version = "1.4.3"
 
 [[deps.PrettyTables]]
-deps = ["Crayons", "LaTeXStrings", "Markdown", "Printf", "Reexport", "StringManipulation", "Tables"]
-git-tree-sha1 = "ee094908d720185ddbdc58dbe0c1cbe35453ec7a"
+deps = ["Crayons", "LaTeXStrings", "Markdown", "PrecompileTools", "Printf", "Reexport", "StringManipulation", "Tables"]
+git-tree-sha1 = "88b895d13d53b5577fd53379d913b9ab9ac82660"
 uuid = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
-version = "2.2.7"
+version = "2.3.1"
 
 [[deps.Printf]]
 deps = ["Unicode"]
@@ -1166,15 +976,15 @@ uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [[deps.QuadGK]]
 deps = ["DataStructures", "LinearAlgebra"]
-git-tree-sha1 = "6ec7ac8412e83d57e313393220879ede1740f9ee"
+git-tree-sha1 = "9b23c31e76e333e6fb4c1595ae6afa74966a729e"
 uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
-version = "2.8.2"
+version = "2.9.4"
 
 [[deps.RCall]]
-deps = ["CategoricalArrays", "Conda", "DataFrames", "DataStructures", "Dates", "Libdl", "Missings", "REPL", "Random", "Requires", "StatsModels", "WinReg"]
-git-tree-sha1 = "d441bdeea943f8e8f293e0e3a78fe2d7c3aa24e6"
+deps = ["CategoricalArrays", "Conda", "DataFrames", "DataStructures", "Dates", "Libdl", "Missings", "Preferences", "REPL", "Random", "Requires", "StatsModels", "WinReg"]
+git-tree-sha1 = "846b2aab2d312fda5e7b099fc217c661e8fae27e"
 uuid = "6f49c342-dc21-5d91-9882-a32aef131414"
-version = "0.13.15"
+version = "0.14.1"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
@@ -1213,15 +1023,15 @@ version = "0.7.0"
 
 [[deps.Scratch]]
 deps = ["Dates"]
-git-tree-sha1 = "30449ee12237627992a99d5e30ae63e4d78cd24a"
+git-tree-sha1 = "3bac05bc7e74a75fd9cba4295cde4045d9fe2386"
 uuid = "6c6a2e73-6563-6170-7368-637461726353"
-version = "1.2.0"
+version = "1.2.1"
 
 [[deps.SentinelArrays]]
 deps = ["Dates", "Random"]
-git-tree-sha1 = "04bdff0b09c65ff3e06a05e3eb7b120223da3d39"
+git-tree-sha1 = "0e7508ff27ba32f26cd459474ca2ede1bc10991f"
 uuid = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
-version = "1.4.0"
+version = "1.4.1"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
@@ -1236,9 +1046,9 @@ uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
 [[deps.SortingAlgorithms]]
 deps = ["DataStructures"]
-git-tree-sha1 = "c60ec5c62180f27efea3ba2908480f8055e17cee"
+git-tree-sha1 = "66e0a8e672a0bdfca2c3f5937efb8538b9ddc085"
 uuid = "a2af1166-a08f-5f64-846c-94a0d3cef48c"
-version = "1.1.1"
+version = "1.2.1"
 
 [[deps.SparseArrays]]
 deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
@@ -1247,9 +1057,9 @@ version = "1.10.0"
 
 [[deps.SpecialFunctions]]
 deps = ["IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
-git-tree-sha1 = "7beb031cf8145577fbccacd94b8a8f4ce78428d3"
+git-tree-sha1 = "e2cfc4012a19088254b3950b85c3c1d8882d864d"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "2.3.0"
+version = "2.3.1"
 
     [deps.SpecialFunctions.extensions]
     SpecialFunctionsChainRulesCoreExt = "ChainRulesCore"
@@ -1264,21 +1074,21 @@ version = "1.10.0"
 
 [[deps.StatsAPI]]
 deps = ["LinearAlgebra"]
-git-tree-sha1 = "45a7769a04a3cf80da1c1c7c60caf932e6f4c9f7"
+git-tree-sha1 = "1ff449ad350c9c4cbc756624d6f8a8c3ef56d3ed"
 uuid = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
-version = "1.6.0"
+version = "1.7.0"
 
 [[deps.StatsBase]]
 deps = ["DataAPI", "DataStructures", "LinearAlgebra", "LogExpFunctions", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Statistics", "StatsAPI"]
-git-tree-sha1 = "75ebe04c5bed70b91614d684259b661c9e6274a4"
+git-tree-sha1 = "5cf7606d6cef84b543b483848d4ae08ad9832b21"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-version = "0.34.0"
+version = "0.34.3"
 
 [[deps.StatsFuns]]
 deps = ["HypergeometricFunctions", "IrrationalConstants", "LogExpFunctions", "Reexport", "Rmath", "SpecialFunctions"]
-git-tree-sha1 = "f625d686d5a88bcd2b15cd81f18f98186fdc0c9a"
+git-tree-sha1 = "cef0472124fab0695b58ca35a77c6fb942fdab8a"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
-version = "1.3.0"
+version = "1.3.1"
 
     [deps.StatsFuns.extensions]
     StatsFunsChainRulesCoreExt = "ChainRulesCore"
@@ -1289,15 +1099,16 @@ version = "1.3.0"
     InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
 
 [[deps.StatsModels]]
-deps = ["DataAPI", "DataStructures", "LinearAlgebra", "Printf", "REPL", "ShiftedArrays", "SparseArrays", "StatsBase", "StatsFuns", "Tables"]
-git-tree-sha1 = "8cc7a5385ecaa420f0b3426f9b0135d0df0638ed"
+deps = ["DataAPI", "DataStructures", "LinearAlgebra", "Printf", "REPL", "ShiftedArrays", "SparseArrays", "StatsAPI", "StatsBase", "StatsFuns", "Tables"]
+git-tree-sha1 = "5cf6c4583533ee38639f73b880f35fc85f2941e0"
 uuid = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
-version = "0.7.2"
+version = "0.7.3"
 
 [[deps.StringManipulation]]
-git-tree-sha1 = "46da2434b41f41ac3594ee9816ce5541c6096123"
+deps = ["PrecompileTools"]
+git-tree-sha1 = "a04cabe79c5f01f4d723cc6704070ada0b9d46d5"
 uuid = "892a3eda-7b42-436c-8928-eab12a02cf0e"
-version = "0.3.0"
+version = "0.3.4"
 
 [[deps.StructTypes]]
 deps = ["Dates", "UUIDs"]
@@ -1326,10 +1137,10 @@ uuid = "3783bdb8-4a98-5b6b-af9a-565f29a5fe9c"
 version = "1.0.1"
 
 [[deps.Tables]]
-deps = ["DataAPI", "DataValueInterfaces", "IteratorInterfaceExtensions", "LinearAlgebra", "OrderedCollections", "TableTraits", "Test"]
-git-tree-sha1 = "1544b926975372da01227b382066ab70e574a3ec"
+deps = ["DataAPI", "DataValueInterfaces", "IteratorInterfaceExtensions", "LinearAlgebra", "OrderedCollections", "TableTraits"]
+git-tree-sha1 = "cb76cf677714c095e535e3501ac7954732aeea2d"
 uuid = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
-version = "1.10.1"
+version = "1.11.1"
 
 [[deps.Tar]]
 deps = ["ArgTools", "SHA"]
@@ -1340,21 +1151,15 @@ version = "1.10.0"
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
-[[deps.TranscodingStreams]]
-deps = ["Random", "Test"]
-git-tree-sha1 = "9a6ae7ed916312b41236fcef7e0af564ef934769"
-uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
-version = "0.9.13"
-
 [[deps.Tricks]]
-git-tree-sha1 = "aadb748be58b492045b4f56166b5188aa63ce549"
+git-tree-sha1 = "eae1bb484cd63b36999ee58be2de6c178105112f"
 uuid = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
-version = "0.1.7"
+version = "0.1.8"
 
 [[deps.URIs]]
-git-tree-sha1 = "074f993b0ca030848b897beff716d93aca60f06a"
+git-tree-sha1 = "67db6cc7b3821e19ebe75791a9dd19c9b1188f2b"
 uuid = "5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
-version = "1.4.2"
+version = "1.5.1"
 
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
@@ -1368,21 +1173,10 @@ git-tree-sha1 = "58d6e80b4ee071f5efd07fda82cb9fbe17200868"
 uuid = "81def892-9a0e-5fdd-b105-ffc91e053289"
 version = "1.3.0"
 
-[[deps.WeakRefStrings]]
-deps = ["DataAPI", "InlineStrings", "Parsers"]
-git-tree-sha1 = "b1be2855ed9ed8eac54e5caff2afcdb442d52c23"
-uuid = "ea10d353-3f73-51f8-a26c-33c1cb351aa5"
-version = "1.4.2"
-
 [[deps.WinReg]]
 git-tree-sha1 = "cd910906b099402bcc50b3eafa9634244e5ec83b"
 uuid = "1b915085-20d7-51cf-bf83-8f477d6f5128"
 version = "1.0.0"
-
-[[deps.WorkerUtilities]]
-git-tree-sha1 = "cd1659ba0d57b71a464a29e64dbc67cfe83d54e7"
-uuid = "76eceee3-57b5-4d4a-8e66-0e911cebbf60"
-version = "1.6.1"
 
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
@@ -1406,66 +1200,58 @@ version = "17.4.0+2"
 """
 
 # ╔═╡ Cell order:
-# ╠═28c981d6-30ab-45fd-bc5f-7649eb371894
-# ╠═4c4b2682-d008-416e-8898-85fd2250d877
-# ╠═f259dc87-eeea-4255-8380-de51e87e6c7a
-# ╠═b94b68a7-aeab-4cb6-bc48-4ac27be1ee7f
-# ╠═3fcf4326-a441-4666-8bca-068a3956f228
-# ╟─0d486c3b-66d7-4b91-b8f6-e534a84db3f1
-# ╠═ec35cc71-9656-4a4f-b854-d69b3abc3851
-# ╠═8fcfaeca-eab8-4e30-ac80-5bf77e4d8f97
-# ╠═4f56158c-5e53-4dcb-a62b-6a0fb7bc6d1b
-# ╠═be5c6bcd-fcd0-4637-ba74-3db56aa70458
-# ╠═3754ba52-4617-4313-bcc4-d86bd2dc10a8
-# ╠═f3aa35ba-d7fe-4e48-a8ba-76f760ec6b52
-# ╠═7f1be803-c01c-4223-bf63-19c5b5a4d781
-# ╠═e43a9b9f-369f-44a4-804f-f50b64fb49fe
-# ╠═77230db4-dfaa-4559-a054-328931a0bb56
-# ╠═44d794c1-fa56-4d71-950d-da8c77f926ea
-# ╠═daebeaf7-b7a5-4a29-afd5-19b57a0f37f7
-# ╠═a724cfe9-9b7c-43c8-80a0-ce87325cf327
-# ╠═4fb00db2-ea4b-4e21-a1ae-02fc21bcfc3c
-# ╠═8dc68ace-4f1c-44af-a112-571d5e5ae6f3
-# ╠═97bd1cb2-fe76-4d44-8738-a3750d0f19a6
-# ╠═892abcee-4e17-4b1d-80eb-ffa5d006b6ff
-# ╠═1a4e61a3-7d58-4348-a409-550b56d93810
-# ╠═b7f9c148-68a7-4b9f-95ad-17c3e6c46dff
-# ╠═05398982-680e-4b8b-baa7-52e66e587798
-# ╠═f98b1a2a-89d0-4cb5-8c53-7957ca582a9f
-# ╠═79348898-63ae-4e8b-8ed9-d030ac6537b2
-# ╠═65180941-5ef9-4cf1-a7e1-f87034e5863e
-# ╠═d30def63-efdf-4ff1-9936-0d4381019647
-# ╠═908f7907-2bb9-4b76-a2c8-864517d399cb
-# ╟─9f45fc0d-33ee-4e43-813c-ddc25ac755f7
-# ╠═4a9081f9-df1c-4ed1-a38f-64af8b1c527f
-# ╠═7df066ec-2d70-44b9-809c-3d90bc765890
-# ╠═c50b6262-77ab-486b-8b86-b61ed07e6f50
-# ╠═e7d3f396-a446-485e-9022-77f7ddc73472
-# ╠═45385342-ff69-4635-ac12-2a3b3f151ecc
-# ╟─4b1ea454-ff92-4b26-a9ab-dbd6c20599bf
-# ╠═c5861930-a539-4cbb-86f7-dfd25e81f60a
-# ╟─5d99e59e-11d1-4ab0-884d-dfcefbde165c
-# ╟─a0d6bcd3-eff8-492c-8983-00974ec5eea4
-# ╟─678a6bfc-6758-4ab3-8bc4-c3eb8fecee3b
-# ╟─0f6adb16-e9d5-47cf-9457-6dda141ec51a
-# ╟─67d27cda-4799-4762-b470-19de5708538b
-# ╟─75bba6bd-2060-4fbe-9b62-d6df3e4c24ad
-# ╟─e69b0fe5-ab03-466d-8afa-74d35d081358
-# ╟─a75ece9b-d89b-43ae-af82-24c0d79135d9
-# ╟─de234030-70c0-408b-9646-ec9c3d237994
-# ╠═38634e92-b813-4823-bbe0-6aedbffbedb2
-# ╠═6a62a82c-320c-4786-b846-b7056be8b9be
-# ╠═3c3d69d0-3874-453c-9de1-ce3a2a93f663
-# ╠═ed3adc2e-28ca-489c-a5a3-ca425f92e28f
-# ╠═0ad9751a-d0fd-4ec1-8e8e-08d16868990a
-# ╠═4f2929bb-8a82-4fe5-8a09-70e47bdc408a
-# ╠═3fe50422-12ed-44d8-a068-7eb60b846eda
-# ╠═38b373ca-b5c4-407a-961a-a38c0824423e
-# ╠═4a55e6ba-c7ca-4bc9-a37c-962012ea09a9
-# ╠═2bedfb05-b4f9-419e-b07e-33bda10f0855
-# ╠═3bd96954-b28b-42f9-9678-b1cb93bea0b5
-# ╟─855a9981-9860-4e25-9b8f-4a14303bd559
-# ╟─c2f2b913-bc2b-465c-8af2-b659ff3b64de
-# ╠═f611d61e-30a1-11ee-3119-99255be33a07
+# ╟─b3f73ba6-07ca-11ef-15eb-895008db2a32
+# ╟─613d1b35-d482-47ad-bb52-b20af0a6408d
+# ╟─eb817e23-6149-470e-ba99-e07ddfaf74e1
+# ╟─b84af093-7737-4250-9777-c6d37a7a6bc1
+# ╟─a7b9de96-b0ef-432d-8e8c-410916f900b1
+# ╟─2614ee96-20c6-459c-b599-1891bbb644b5
+# ╟─1814c337-2379-466c-97df-dbee6362ce5c
+# ╟─630a7f0f-b5df-496e-a4c7-4c7d3debf8bd
+# ╟─65bb64e2-194b-41b5-8228-afc90c165497
+# ╠═47fead9c-9bca-49db-984c-20988edd562c
+# ╟─32661546-6615-4782-93dd-94cc18554e37
+# ╠═b9589e8f-71c5-4d52-805d-d745d778bcc7
+# ╠═e1e100c6-5f85-4c73-bd93-f8d5fca6d0ff
+# ╠═33092efb-687e-4601-8a5b-92ce52a85ea1
+# ╠═891ce1f8-efd7-4fcb-ac98-516c2fb01398
+# ╠═51a426b8-5ab7-4887-8ae5-f9f153324efe
+# ╠═6ebb149b-9f16-4615-ba23-7e01d8d9e46b
+# ╠═9eee6aa0-4710-444e-b320-953c3b4277cf
+# ╠═c049e7b0-f3c4-4ee9-a699-f941e5970405
+# ╠═324a0b89-f160-42b3-88b4-ce7e27298236
+# ╠═efd5cdf5-7961-4747-8a2e-307f6aba60f3
+# ╠═8c68f965-493b-4465-941c-9cd10629de2d
+# ╠═cafbc4ef-a007-4588-ba30-ff0fceae19ae
+# ╠═e410a3d8-7f8b-46ab-988b-06432bf9c5bd
+# ╠═9c093d57-dffc-45ef-a3bc-68b69ab17e80
+# ╟─02d38202-ef44-44d3-8780-edd3217c3133
+# ╠═8a2f5a79-3229-4a73-afa3-70cfe0666e65
+# ╠═fbba6ab9-3339-4d3f-964b-81e4f625f7e9
+# ╠═a6d3bd52-5228-42eb-9a1c-f99bccd4951e
+# ╠═2a960f22-0d11-49fe-9f4b-db5a21afcdec
+# ╠═3f2521e9-81ac-4bb9-8c74-e1961c090e50
+# ╠═6f0d1339-d1f2-4344-bb5a-465ab2a49300
+# ╟─b59871d8-0ce1-4bbd-b698-b461ffef5561
+# ╠═7a8a9af0-2f7a-4282-b1df-ef5aea865a41
+# ╠═f747b27a-658a-4692-9e8b-ec4bdf40f1aa
+# ╠═fcd90d06-bce5-442f-89a4-d049a1b3c826
+# ╠═22ec7170-ed1c-4d92-9a30-c6b9cab84bca
+# ╠═a046bd56-40a7-4130-bbb4-2ed28ee9d103
+# ╠═55e31504-27ae-427d-92d5-0e942c9bb8e5
+# ╠═97c70ec5-93b7-4503-9de9-67db304d3eb7
+# ╠═e4498937-6b26-4e74-a66c-94f74694f5b7
+# ╠═cd4e9a48-eee4-4d0d-b0f9-5359bf92041f
+# ╟─19b06d54-72c1-423c-9039-446fee67aed5
+# ╠═fa88b54f-2e74-474d-a772-e252ac29794d
+# ╠═de3078e6-7102-4e73-aff2-93a2835967d6
+# ╟─fd5f7245-e21e-4cbd-a15e-41609de683e1
+# ╟─ea4939cc-cdac-4c36-9b57-7c3100fc1e2e
+# ╠═edc198d0-95ff-4eea-a0d4-57336092bfaf
+# ╠═03aed7c0-dc38-45dd-b965-01316bfdf947
+# ╠═d181b7c8-9f69-4786-b643-4a2d0aa14f3e
+# ╠═19b8232d-16e1-4b22-805e-16ffc17c9ae0
+# ╟─6a4fbd54-d5f2-4cc1-a58a-6d28a535de1a
+# ╠═f15bf377-6b8c-4b53-8b9f-ec438144ff9b
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
