@@ -70,7 +70,7 @@ let
 	x = 1:100;
 	y1 = 50 .+ x;
 	y2 = 5 .+ 2x;
-	p = plot.scatter(; x=x, y=y1, mode="lines", name="Something I Already  Know").scatter(;x=x, y=y2, mode="lines", name="Julia")
+	p = plot.scatter(; x=x, y=y1, mode="lines", name="Something I Already Know").scatter(;x=x, y=y2, mode="lines", name="Julia")
 	p.layout.xaxis = Config(showticklabels=false, zeroline=false, title="Time")
     p.layout.yaxis = Config(showticklabels=false, zeroline=false, title="Productivity")
 	p
@@ -207,6 +207,15 @@ md"""
 !!! info "Specialized code \"for free\""
 	You get *specialized* code without telling Julia about the types of inputs.
 """
+
+# ╔═╡ f16cf76f-b633-4b07-949b-9d7470e6a474
+f(x, y) = x + y
+
+# ╔═╡ c27cf96f-d020-441c-b67a-6fe70381f3ff
+@code_llvm f(1, 1)
+
+# ╔═╡ 7d36652e-12da-453f-baaa-1adbcbaf01d9
+@code_llvm f(1.0, 1.0)
 
 # ╔═╡ 238de788-2786-4857-ab43-521511bd08d7
 md"""
@@ -509,18 +518,18 @@ md"""
 # ╔═╡ e838f6bf-0e3a-43ce-a791-74ecc6b22b5e
 let 
 	x = [1, 2]
+	
 	push!(x, 3)  # Add `3` to the end
+	
 	popfirst!(x)  # Remove `1` from the start
+	
 	x
 end
 
 # ╔═╡ bdb16f98-57be-425e-99c8-6f02ccf14475
 md"""
-- In-place operations can provide big performance gains:
+- In-place operations sometimes provide big performance gains.
 """
-
-# ╔═╡ 69b4a737-6ce4-4f85-b579-e894c1bb24e5
-md"(todo: example of in-place op)"
 
 # ╔═╡ fb4b17e9-0669-40d9-a53a-6538bb46b04e
 md"""
@@ -1110,6 +1119,9 @@ version = "17.4.0+2"
 # ╟─7f5370e1-ba7d-44f9-8006-8dc6d3b91ed2
 # ╟─6cfd0add-04a0-49c5-bfb3-ca5219f8fde2
 # ╟─2fdeddbc-90ad-4fb3-8c1c-44846fc5dd1b
+# ╠═f16cf76f-b633-4b07-949b-9d7470e6a474
+# ╠═c27cf96f-d020-441c-b67a-6fe70381f3ff
+# ╠═7d36652e-12da-453f-baaa-1adbcbaf01d9
 # ╟─238de788-2786-4857-ab43-521511bd08d7
 # ╟─5159aafe-93f0-4b4d-9140-c7e9bc806b86
 # ╠═8266f02e-5ccf-49a4-8283-fc7cfe0f8106
@@ -1141,7 +1153,6 @@ version = "17.4.0+2"
 # ╟─ac61cf71-b30a-48e5-a8fc-c08944e8426f
 # ╠═e838f6bf-0e3a-43ce-a791-74ecc6b22b5e
 # ╟─bdb16f98-57be-425e-99c8-6f02ccf14475
-# ╠═69b4a737-6ce4-4f85-b579-e894c1bb24e5
 # ╟─fb4b17e9-0669-40d9-a53a-6538bb46b04e
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
