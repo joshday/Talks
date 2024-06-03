@@ -228,15 +228,6 @@ md"""## No Hidden State
 # ╔═╡ 9bb0d697-2575-4840-ac5d-096eed487f34
 md"### Multiple Definitions of Same Variable"
 
-# ╔═╡ 5342fac8-464e-4724-950f-fff9f3156cc7
-var = 1
-
-# ╔═╡ 190356c3-ea1a-4da6-b878-3dd284ef9c3b
-# ╠═╡ disabled = true
-#=╠═╡
-var = 2
-  ╠═╡ =#
-
 # ╔═╡ 460ffb7d-8fe1-40d6-814e-a468890b7722
 md"""
 ## A More Advanced Example
@@ -417,6 +408,17 @@ Note that in 2023, 78% of Julia User & Developer Survey respondents said they us
 
 # ╔═╡ 0e870fd9-3b98-4e41-91d5-9a2f4f4c72b0
 md"# Next: Why Julia?"
+
+# ╔═╡ 190356c3-ea1a-4da6-b878-3dd284ef9c3b
+# ╠═╡ disabled = true
+#=╠═╡
+var = 2
+  ╠═╡ =#
+
+# ╔═╡ 5342fac8-464e-4724-950f-fff9f3156cc7
+#=╠═╡
+var = 1
+  ╠═╡ =#
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """

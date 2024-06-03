@@ -531,6 +531,13 @@ md"""
 - In-place operations sometimes provide big performance gains.
 """
 
+# ╔═╡ 782eaf00-f0b0-4f9d-a77d-df38108d4952
+md"""
+!!! aside "Function Names Ending in `!` is a *Convention*"
+	- There's nothing special about adding `!` to a function name.  
+	- It is merely a convention that provides a hint to the user.
+"""
+
 # ╔═╡ fb4b17e9-0669-40d9-a53a-6538bb46b04e
 md"""
 ## Reproducibility
@@ -1105,7 +1112,7 @@ version = "17.4.0+2"
 """
 
 # ╔═╡ Cell order:
-# ╟─57c19f11-d09a-4d5f-8905-533e4192f6a5
+# ╠═57c19f11-d09a-4d5f-8905-533e4192f6a5
 # ╟─96eadd80-13a8-11ef-0d1e-4d6ff384ac8a
 # ╟─bb9083eb-be2f-4fef-aa3e-27b44045a107
 # ╟─ef4b6a7f-9925-4c1a-a969-645a5f3b4852
@@ -1153,6 +1160,7 @@ version = "17.4.0+2"
 # ╟─ac61cf71-b30a-48e5-a8fc-c08944e8426f
 # ╠═e838f6bf-0e3a-43ce-a791-74ecc6b22b5e
 # ╟─bdb16f98-57be-425e-99c8-6f02ccf14475
+# ╟─782eaf00-f0b0-4f9d-a77d-df38108d4952
 # ╟─fb4b17e9-0669-40d9-a53a-6538bb46b04e
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

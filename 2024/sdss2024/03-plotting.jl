@@ -4,19 +4,38 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+end
+
 # ╔═╡ 522fac84-0895-11ef-394b-41c5fcdb71ea
 begin
 	using Distributions
 	using Cobweb
 	using PlutoUI
+	import GR
+	import PlotlyBase
+	img(src, style="") = h.img(; src, style="border-radius:8px;$style")
 	md"""
 	(notebook setup)
 	$(PlutoUI.TableOfContents())
+	$(HTML("<style>h1 { padding-top: 200px; }</style>"))
+	$(HTML("<style>h2 { padding-top: 100px; }</style>"))
+	$(HTML("<style>h3 { padding-top: 50px; }</style>"))
 	"""
 end
 
 # ╔═╡ 36039832-ed3a-46d1-bebf-125fc77252df
 using Plots
+
+# ╔═╡ 5fdf808c-0481-4df4-afb7-eccfa935e9e9
+using LaTeXStrings  # Enables writing LaTeX via L"\beta"
 
 # ╔═╡ f32e1efd-1284-408f-9bbf-60c53a6ad92a
 md"""
@@ -36,12 +55,10 @@ md"""
 
 # ╔═╡ c7dc808e-18ca-4d19-b982-658716ab9317
 md"""
-## Web Browsers and Image-Heavy Pages
+# Aside: `@details` Macro 
 
 - Browsers often don't do well with image-heavy pages.
-- To ease the burden on your browser, let's write a macro to hide plots when we're not viewing them.
-- This is a good opportunity for a simple macro.  
-- *Question: Why does this need to be a macro?*
+- To ease the burden on viewing this plot-heavy notebook in your browser, let's write a macro to hide plots when we're not viewing them.  
 
 We can use the `<details>` HTML tag to create "foldable" content.  We want the underlying HTML to look like:
 
@@ -56,20 +73,265 @@ We can use the `<details>` HTML tag to create "foldable" content.  We want the u
 # ╔═╡ 02088989-68c4-481b-b9df-59863e27637c
 # Remember: macro input/output is an `Expr`
 macro details(ex)
-	h = Cobweb.h  # h.tag(children...) == <tag>children...</tag>
-	quote
-		h.details(
-			h.summary(h.code($(string(ex)))),
-			$ex
-		)
+	# Remove unused parts of the Expr
+	ex = Base.remove_linenums!(ex) 
+	
+	# HTML writer function
+	h = Cobweb.h  
+
+	# If code is multi-line use <pre>.  Otherwise use <code>.
+	code = ex.head in [:block, :let] ? h.pre(string(ex)) : h.code(string(ex))
+
+	# Return the Expr
+	esc(:(h.details(h.summary($code), $ex)))
+end
+
+# ╔═╡ 68c0ffa5-850e-4aba-b3b9-a72856ddb477
+md"""
+!!! aside "Let's test it out"
+	Question: Why does this need to be a macro?  Why not a function?
+"""
+
+# ╔═╡ 06ca47ca-382e-42ce-b1fb-9b3017ffe4a0
+@details 1 + 1
+
+# ╔═╡ ed6284d8-ade5-45fa-85a2-75786a92be61
+md"# Plots.jl"
+
+# ╔═╡ 0ec66192-5700-4b88-b6bf-63969eee9970
+md"""
+## Basic Usage
+
+!!! aside "The core function is `plot(data...; attributes...)`"
+	- `data`: What to plot.
+	- `attributes`: How to plot it.
+"""
+
+# ╔═╡ 4c30e8ba-2aac-4d56-9d8a-dfce73f6fc0e
+@details plot(randn(10))
+
+# ╔═╡ 0c98363f-3aba-47f0-b017-d1cdc6e222e2
+@details plot(randn(10), randn(10); seriestype = :scatter)
+
+# ╔═╡ 5ea8d96a-3e12-429a-b2f6-f51311cc3da0
+@details plot(randn(10), randn(10), randn(10); seriestype=:scatter)
+
+# ╔═╡ 67e29bfe-cbee-4390-8841-b8fae458baf2
+@details plot(sin, 0, 2pi; label="sin(x)")
+
+# ╔═╡ 763ae914-46b9-4061-945e-80f331083273
+md"""
+## Every Column is a *Series*
+
+A Series is a set of related observations.
+"""
+
+# ╔═╡ e177b63d-a9b8-48eb-8114-3877d1379ab1
+md"""
+!!! aside "Matrix Data"
+	E.g. a 10×3 Matrix produces 3 series with 10 observations each.
+"""
+
+# ╔═╡ ec8ebc08-f03e-4886-8f77-bd65b70b94c0
+@details plot(rand(10, 3)) 
+
+# ╔═╡ b4bc520a-4ab9-486e-9825-0dfa1129b487
+md"""
+!!! aside "Passing Attributes *By Column*"
+	Keyword arguments can also be mapped to associated series by column.
+"""
+
+# ╔═╡ 6b94f7c0-28d8-46f0-98f3-9c774244ba29
+@details plot(rand(10,3), label=["one" "two" "three"], seriestype=["scatter" "line"])
+
+# ╔═╡ cdfeef39-2e07-4a6f-a6dd-687a8a084637
+md"""
+## Each *Series Type* has a Corresponding Function
+
+E.g. `plot(x; seriestype=:scatter) == scatter(x)`
+"""
+
+# ╔═╡ f6cf7433-6ddb-430b-9544-8e2476adf718
+md"Choose Series Type: $(@bind seriestype Select([nothing, :scatter, :histogram2d]))"
+
+# ╔═╡ 27decde3-18ee-46ba-b0e6-9d0ab2fc7abc
+x = randn(100); y = randn(100);
+
+# ╔═╡ fad45705-0e18-432a-9d8f-598abe3bbeb2
+if isnothing(seriestype)
+	md"(no seriestype chosen above)"
+else
+	@info "$seriestype(x, y)"
+	getproperty(Plots, seriestype)(x, y)
+end
+
+# ╔═╡ 3cc62e5c-548e-4601-827b-beaacbada118
+md"## Plots can be Mutated"
+
+# ╔═╡ a79a70b5-1486-444a-9660-17df271b83e9
+@details p1 = plot(10:-1:1)
+
+# ╔═╡ 3a20eb1c-5a85-4d08-bd6d-c71ccb7cc4ae
+@details scatter!(p1, 1:10; seriestype=:scatter)
+
+# ╔═╡ 4f57dad5-ff3e-4c80-b2ed-6f24ee74eb23
+md"""
+!!! aside "Attributes have Mutating Functions Too"
+	E.g. `title!`, `label!`, etc.
+
+"""
+
+# ╔═╡ 9eda1a58-c7f7-42cf-821a-972c231294da
+@details title!(p1, "My Title")
+
+# ╔═╡ e40ab538-4be4-4ba7-baf2-a1e63865cdf3
+md"""
+## There are Multiple *Backends*
+
+Backends have a corresponding function, e.g.
+
+- `gr()` (static plots for publications, etc.)
+- `plotly()` (interactive Javascript plots for dashboards, etc.)
+
+!!! aside "Demo"
+	We'll demonstrate this in the REPL.  Typically these functions will only be called once at the beginning of a script.
+"""
+
+# ╔═╡ 4b06d302-a324-411a-a245-b15d22fab706
+md"""
+## Attributes have *Aliases*
+
+Plots comes with built-in shorthands for common attributes, e.g.
+
+- `ms` for `markersize`
+- `st` for `seriestype`
+- `lab` for `label`
+"""
+
+# ╔═╡ 6e8b7445-c52b-4ff6-8459-503fe59d47f7
+@details scatter(x, ms=10, lab="Label")
+
+# ╔═╡ f989c223-4f4b-470b-9f22-b10338297235
+md"""
+
+!!! aside "Magic Arguments"
+	Some attributes allow *magic arguments*, a Tuple of values that will map naturally to an attribute based on the type.
+
+	E.g. `m = (10, 0.5, "green")` maps `marker` attributes:
+	- `markersize = 10`
+	- `markeralpha = 0.5`
+	- `markercolor = "green"`
+"""
+
+# ╔═╡ cb19dbd5-4841-4747-b211-f253c5359223
+@details scatter(x, m=(10, .5, "green"))
+
+# ╔═╡ c9d82ed5-6017-4bed-b327-09dc7a5c9905
+md"""
+
+# Subplots/Layout
+
+- See [https://docs.juliaplots.org/latest/layouts/](https://docs.juliaplots.org/latest/layouts/) for more details.
+"""
+
+# ╔═╡ 81b37317-5089-4f6c-a494-af5210bbcb1c
+@details plot(rand(10,4), layout=4)
+
+# ╔═╡ 455723ad-c29e-418b-b21e-31a51eb70f0b
+@details plot(rand(10, 4), layout = (2, 1))
+
+# ╔═╡ 1f509dcc-4396-436d-931a-bbe35e34185b
+@details let 
+	p1 = plot(x)
+	p2 = plot(y)
+	plot(p1, p2)
+end
+
+# ╔═╡ fa571e4b-7f44-4a35-9a56-7b28add60349
+md"""
+!!! aside "Aside: Macros Within Macros"
+	Nested macros are not expanded.  E.g. in the expressions `@x @y expr`, `@x` is applied first and `@y` second.
+
+	In order to demonstrate Plots.jl's `@layout` macro, we'll remove `@details`.
+"""
+
+# ╔═╡ c862dcff-7bd2-440b-8973-13259c48e6ce
+let 
+	p1 = bar(x)
+	p2 = scatter(y)
+	l = @layout [ a{0.7w} b{0.3w}]
+	plot(p1, p2, layout=l)
+end;  # Remove the `;` to display the plot
+
+# ╔═╡ 9add3a5f-cfb5-440e-a51a-16d3729c0bb0
+md"""
+# Recipes
+
+A plot *recipe* is a mechanism for extending Plots without the need to depend on the entire Plots.jl package (see [RecipesBase docs](https://docs.juliaplots.org/dev/RecipesBase/)).
+"""
+
+# ╔═╡ a3ef43c8-e22c-4648-95fe-900fd69fe305
+let
+	# Suppose we have a struct that represents fitted regression coefficients
+	struct LinRegModel
+		β::Vector{Float64}
+	end
+
+	# Let's tell Plots.jl how this type should be plotted.
+	# Keyword arguments are set via `-->`
+	# Positional arguments are returned at the end of the function.
+	@recipe function f(lm::LinRegModel)
+		seriestype --> :bar
+		title --> "LinRegModel Coefficients"
+		legend --> false
+		color --> "black"
+		alpha --> 0.5
+		xlabel --> "Coefficient"
+		ylabel --> "Value"
+		[L"\beta_{%$i}" for i in 1:length(lm.β)], lm.β  # Return data (x and y)
+	end
+
+	# Test it out:
+	plot(LinRegModel(1:10))
+end;
+
+# ╔═╡ 82cc14f2-bbe0-4aec-abbf-a349c9971768
+md"""
+!!! aside "Why Write a Recipe vs. a Function?"
+	A recipe will automatically work with the rest of the machinery in Plots, such as exposing all of the Plots attributes.  E.g. `plot(my_type; linecolor="red")` will "just work".
+"""
+
+# ╔═╡ 736fe7c6-85e3-4e6b-9212-53d520863e31
+md"""
+# Animations
+
+Plots has some great utilities for generating gifs.
+"""
+
+# ╔═╡ 563c5e67-ef8d-40cf-9dc1-52375a330645
+let
+	data = [0.0]
+	@gif for i in 1:100
+		push!(data, data[end] + randn() / i)
+		plot(data, lab=nothing)
 	end
 end
 
-# ╔═╡ ed6284d8-ade5-45fa-85a2-75786a92be61
-md"# Plots"
+# ╔═╡ 49b1aa14-07d1-40e0-8278-4d4613cb2ce8
+md"""
+# Themes
 
-# ╔═╡ 19ea8563-86ea-4613-8c32-641a1012cea4
-@details Plots.plot(1:10)
+The plot theme can be set e.g. `theme(:ggplot2)`.
+"""
+
+# ╔═╡ fc8ee68f-4157-48bd-b287-ad7f4fae1841
+md"Choose Theme: $(@bind plot_theme Select([:default, :dark, :ggplot2, :juno, :lime, :sand, :solarized, :solarized_light, :wong, :wong2, :gruvbox_dark, :gruvbox_light, :bright, :vibrant, :mute, :dao, :dracula]))"
+
+# ╔═╡ 4d10503d-7e4f-4cf8-84a5-5dd2e98a58d8
+begin
+	@info plot_theme
+	Plots.showtheme(plot_theme)
+end
 
 # ╔═╡ 877d5a4d-ef2b-4329-a810-7bc6e158cfb3
 md"# Notebook Utility Functions"
@@ -83,18 +345,24 @@ downloads_badge(pkg) = Markdown.parse("""
 md"""
 # Plotting Packages
 
-There is no built-in plotting functionality in Julia.  There are many to choose from.  Here is a [very good Discourse post](https://discourse.julialang.org/t/comparison-of-plotting-packages/99860/2) that compare various packages. 
+
+!!! aside "What to Choose?"
+	There is no built-in plotting functionality in Julia.  
+
+	There are many to choose from.  
+
+	Here is a [very good Discourse post](https://discourse.julialang.org/t/comparison-of-plotting-packages/99860/2) that compare various packages. 
 
 ## Download Stats
 
 Package | Downloads
 --------|----------
 Plots | $(downloads_badge("Plots"))
-Makie | $(downloads_badge("Makie"))
 PlotlyJS | $(downloads_badge("PlotlyJS"))
+Makie | $(downloads_badge("Makie"))
 PyPlot | $(downloads_badge("PyPlot"))
-Gadfly | $(downloads_badge("Gadfly"))
 UnicodePlots | $(downloads_badge("UnicodePlots"))
+Gadfly | $(downloads_badge("Gadfly"))
 Vega | $(downloads_badge("Vega"))
 VegaLite | $(downloads_badge("VegaLite"))
 PlotlyLight | $(downloads_badge("PlotlyLight"))
@@ -105,12 +373,18 @@ PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 Cobweb = "ec354790-cf28-43e8-bb59-b484409b7bad"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
+LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
+PlotlyBase = "a03496cd-edff-5a9b-9e67-9cda94a718b5"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 Cobweb = "~0.6.1"
-Distributions = "~0.25.108"
+Distributions = "~0.25.109"
+GR = "~0.73.5"
+LaTeXStrings = "~1.3.1"
+PlotlyBase = "~0.8.19"
 Plots = "~1.40.4"
 PlutoUI = "~0.7.59"
 """
@@ -121,7 +395,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.3"
 manifest_format = "2.0"
-project_hash = "a9b7ccad0035897f1369c2eba6e870532721e6e9"
+project_hash = "f40077bbe271b62c8f88d808f51a3983a8184365"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -263,9 +537,9 @@ version = "1.9.1"
 
 [[deps.Distributions]]
 deps = ["AliasTables", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns"]
-git-tree-sha1 = "22c595ca4146c07b16bcf9c8bea86f731f7109d2"
+git-tree-sha1 = "9c405847cc7ecda2dc921ccf18b47ca150d7317e"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.108"
+version = "0.25.109"
 
     [deps.Distributions.extensions]
     DistributionsChainRulesCoreExt = "ChainRulesCore"
@@ -735,6 +1009,12 @@ git-tree-sha1 = "949347156c25054de2db3b166c52ac4728cbad65"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
 version = "0.11.31"
 
+[[deps.Parameters]]
+deps = ["OrderedCollections", "UnPack"]
+git-tree-sha1 = "34c0e9ad262e5f7fc75b10a9952ca7692cfc5fbe"
+uuid = "d96e819e-fc66-5662-9728-84c9c7592b0a"
+version = "0.12.3"
+
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
 git-tree-sha1 = "8489905bcdbcfac64d1daa51ca07c0d8f0283821"
@@ -759,15 +1039,21 @@ version = "1.10.0"
 
 [[deps.PlotThemes]]
 deps = ["PlotUtils", "Statistics"]
-git-tree-sha1 = "1f03a2d339f42dca4a4da149c7e15e9b896ad899"
+git-tree-sha1 = "6e55c6841ce3411ccb3457ee52fc48cb698d6fb0"
 uuid = "ccf2f8ad-2431-5c83-bf29-c5338b663b6a"
-version = "3.1.0"
+version = "3.2.0"
 
 [[deps.PlotUtils]]
 deps = ["ColorSchemes", "Colors", "Dates", "PrecompileTools", "Printf", "Random", "Reexport", "Statistics"]
 git-tree-sha1 = "7b1a9df27f072ac4c9c7cbe5efb198489258d1f5"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 version = "1.4.1"
+
+[[deps.PlotlyBase]]
+deps = ["ColorSchemes", "Dates", "DelimitedFiles", "DocStringExtensions", "JSON", "LaTeXStrings", "Logging", "Parameters", "Pkg", "REPL", "Requires", "Statistics", "UUIDs"]
+git-tree-sha1 = "56baf69781fc5e61607c3e46227ab17f7040ffa2"
+uuid = "a03496cd-edff-5a9b-9e67-9cda94a718b5"
+version = "0.8.19"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "JLFzf", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "PrecompileTools", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "RelocatableFolders", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "UnitfulLatexify", "Unzip"]
@@ -812,9 +1098,9 @@ deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [[deps.PtrArrays]]
-git-tree-sha1 = "077664975d750757f30e739c870fbbdc01db7913"
+git-tree-sha1 = "f011fbb92c4d401059b2212c05c0601b70f8b759"
 uuid = "43287f4e-b6f4-7ad1-bb20-aadabca52c3d"
-version = "1.1.0"
+version = "1.2.0"
 
 [[deps.Qt6Base_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Fontconfig_jll", "Glib_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "OpenSSL_jll", "Vulkan_Loader_jll", "Xorg_libSM_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Xorg_libxcb_jll", "Xorg_xcb_util_cursor_jll", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_keysyms_jll", "Xorg_xcb_util_renderutil_jll", "Xorg_xcb_util_wm_jll", "Zlib_jll", "libinput_jll", "xkbcommon_jll"]
@@ -988,9 +1274,9 @@ deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [[deps.TranscodingStreams]]
-git-tree-sha1 = "5d54d076465da49d6746c647022f3b3674e64156"
+git-tree-sha1 = "a947ea21087caba0a798c5e494d0bb78e3a1a3a0"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
-version = "0.10.8"
+version = "0.10.9"
 weakdeps = ["Random", "Test"]
 
     [deps.TranscodingStreams.extensions]
@@ -1009,6 +1295,11 @@ version = "1.5.1"
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
+
+[[deps.UnPack]]
+git-tree-sha1 = "387c1f73762231e86e0c9c5443ce3b4a0a9a0c2b"
+uuid = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
+version = "1.0.2"
 
 [[deps.Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
@@ -1336,15 +1627,55 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
-# ╟─522fac84-0895-11ef-394b-41c5fcdb71ea
-# ╠═2955a447-6308-4230-a495-19253eead7b6
+# ╠═522fac84-0895-11ef-394b-41c5fcdb71ea
+# ╟─2955a447-6308-4230-a495-19253eead7b6
 # ╟─f32e1efd-1284-408f-9bbf-60c53a6ad92a
 # ╟─981587d0-4284-46e6-a97b-1dc801ef2c41
 # ╟─c7dc808e-18ca-4d19-b982-658716ab9317
 # ╠═02088989-68c4-481b-b9df-59863e27637c
+# ╟─68c0ffa5-850e-4aba-b3b9-a72856ddb477
+# ╠═06ca47ca-382e-42ce-b1fb-9b3017ffe4a0
 # ╟─ed6284d8-ade5-45fa-85a2-75786a92be61
 # ╠═36039832-ed3a-46d1-bebf-125fc77252df
-# ╠═19ea8563-86ea-4613-8c32-641a1012cea4
+# ╟─0ec66192-5700-4b88-b6bf-63969eee9970
+# ╟─4c30e8ba-2aac-4d56-9d8a-dfce73f6fc0e
+# ╟─0c98363f-3aba-47f0-b017-d1cdc6e222e2
+# ╟─5ea8d96a-3e12-429a-b2f6-f51311cc3da0
+# ╟─67e29bfe-cbee-4390-8841-b8fae458baf2
+# ╟─763ae914-46b9-4061-945e-80f331083273
+# ╟─e177b63d-a9b8-48eb-8114-3877d1379ab1
+# ╟─ec8ebc08-f03e-4886-8f77-bd65b70b94c0
+# ╟─b4bc520a-4ab9-486e-9825-0dfa1129b487
+# ╟─6b94f7c0-28d8-46f0-98f3-9c774244ba29
+# ╟─cdfeef39-2e07-4a6f-a6dd-687a8a084637
+# ╟─f6cf7433-6ddb-430b-9544-8e2476adf718
+# ╠═27decde3-18ee-46ba-b0e6-9d0ab2fc7abc
+# ╟─fad45705-0e18-432a-9d8f-598abe3bbeb2
+# ╟─3cc62e5c-548e-4601-827b-beaacbada118
+# ╟─a79a70b5-1486-444a-9660-17df271b83e9
+# ╟─3a20eb1c-5a85-4d08-bd6d-c71ccb7cc4ae
+# ╟─4f57dad5-ff3e-4c80-b2ed-6f24ee74eb23
+# ╟─9eda1a58-c7f7-42cf-821a-972c231294da
+# ╟─e40ab538-4be4-4ba7-baf2-a1e63865cdf3
+# ╟─4b06d302-a324-411a-a245-b15d22fab706
+# ╟─6e8b7445-c52b-4ff6-8459-503fe59d47f7
+# ╟─f989c223-4f4b-470b-9f22-b10338297235
+# ╟─cb19dbd5-4841-4747-b211-f253c5359223
+# ╟─c9d82ed5-6017-4bed-b327-09dc7a5c9905
+# ╟─81b37317-5089-4f6c-a494-af5210bbcb1c
+# ╟─455723ad-c29e-418b-b21e-31a51eb70f0b
+# ╟─1f509dcc-4396-436d-931a-bbe35e34185b
+# ╟─fa571e4b-7f44-4a35-9a56-7b28add60349
+# ╠═c862dcff-7bd2-440b-8973-13259c48e6ce
+# ╟─9add3a5f-cfb5-440e-a51a-16d3729c0bb0
+# ╠═5fdf808c-0481-4df4-afb7-eccfa935e9e9
+# ╠═a3ef43c8-e22c-4648-95fe-900fd69fe305
+# ╟─82cc14f2-bbe0-4aec-abbf-a349c9971768
+# ╟─736fe7c6-85e3-4e6b-9212-53d520863e31
+# ╠═563c5e67-ef8d-40cf-9dc1-52375a330645
+# ╟─49b1aa14-07d1-40e0-8278-4d4613cb2ce8
+# ╟─fc8ee68f-4157-48bd-b287-ad7f4fae1841
+# ╟─4d10503d-7e4f-4cf8-84a5-5dd2e98a58d8
 # ╟─877d5a4d-ef2b-4329-a810-7bc6e158cfb3
 # ╟─42a20eab-c3e0-41c2-86ff-59cc1c6ff168
 # ╟─00000000-0000-0000-0000-000000000001
