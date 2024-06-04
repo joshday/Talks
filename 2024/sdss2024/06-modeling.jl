@@ -180,6 +180,12 @@ confint(model1)
 # ╔═╡ ee0a53c1-1bfb-44c2-a4e0-ac45a03e340b
 loglikelihood(model1)
 
+# ╔═╡ d1f6f634-6150-47da-8915-c5c9252b0379
+md"""
+!!! note
+	Julia has less 
+"""
+
 # ╔═╡ 12cea0ec-035b-4033-93ac-3954d1bff798
 let 
 	scatter(residuals(model1), lab=nothing, title="Residual Plot")
@@ -202,18 +208,13 @@ glm(formula, df, family, link)
 
 # ╔═╡ 805cb0d3-3e89-4cd4-8a4a-3bdbc20515fe
 model2 = let 
-	# Response values needs to be in [0, 1]
+	# Response values needs to be in the support of the distribution family
 	temp = transform(df, :sex => ByRow(x -> x == "MALE") => "m1")
 
 	f = @formula(m1 ~ 1 + species * body_mass_g)
 
 	glm(f, temp, Bernoulli(), LogitLink())
 end
-
-# ╔═╡ 176e3528-3d31-4df6-980c-cd670d673283
-md"""
-!!! note "Interface is the Same as for `lm`"
-"""
 
 # ╔═╡ a488b2e6-2660-463e-8f89-c8017f56ca55
 fitted(model2)
@@ -225,38 +226,120 @@ coef(model2)
 md"""
 # Bayesian Statistics
 
+
 - Great resource [here](https://storopoli.io/Bayesian-Julia/).
 """
+
+# ╔═╡ d59726e9-e1d7-4108-8e35-c53fbdd7d357
+md"""
+## The Hard Way
+
+!!! note "Implementing it Yourself"
+	- This example demonstrates why Julia is a great language for Bayesian statistics.  
+	- It comes from a [2013 talk by Doug Bates: "Julia for R Programmers"](https://pages.stat.wisc.edu/~bates/JuliaForRProgrammers.pdf)
+"""
+
+# ╔═╡ 053e7c27-912e-4487-a271-23d842880b1a
+md"""
+!!! aside "Task"
+	Write a Gibbs sampler for the density:
+
+
+	$f(x, y) = k x^2 \exp(- x y^2 - y^2 + 2y - 4x), \quad x > 0$
+
+
+	using the conditional distributions
+
+
+	$\begin{eqnarray*}
+	  X | Y &\sim& \Gamma \left( 3, \frac{1}{y^2 + 4} \right) \\
+	  Y | X &\sim& N \left(\frac{1}{1+x}, \frac{1}{2(1+x)} \right).
+	\end{eqnarray*}$
+"""
+
+# ╔═╡ 46029c8b-3004-4f8c-8a3f-3b497bf54118
+md"""
+### R Solution
+"""
+
+# ╔═╡ b23b9e33-2902-4f9b-a287-e06f6db84125
+R"""
+library(Matrix)
+
+rgibbs <- function(N, thin) {
+  mat <- matrix(0, nrow=N, ncol=2)
+  x <- y <- 0
+  for (i in 1:N) {
+    for (j in 1:thin) {
+      x <- rgamma(1, 3, y * y + 4) # 3rd arg is rate
+      y <- rnorm(1, 1 / (x + 1), 1 / sqrt(2 * (x + 1)))
+    }
+    mat[i,] <- c(x, y)
+  }
+  mat
+}
+""";
+
+# ╔═╡ 86315f2b-9365-4a8e-b2c5-cbd4d005f8d0
+rgibbs_result = R"""
+system.time(rgibbs(10000, 500))
+"""
+
+# ╔═╡ 7436c067-f1a4-4cee-9ff4-3cc17ce48831
+md"""
+### Julia Solution
+
+- Almost line-for-line equivalent to R solution.
+"""
+
+# ╔═╡ cc8e593c-b725-4481-b86c-a405bc611a48
+function jgibbs(N, thin)
+    mat = zeros(N, 2)
+    x = y = 0.0
+    for i in 1:N
+        for j in 1:thin
+            x = rand(Gamma(3, 1 / (y * y + 4)))
+            y = rand(Normal(1 / (x + 1), 1 / sqrt(2(x + 1))))
+        end
+        mat[i, 1] = x
+        mat[i, 2] = y
+    end
+    mat
+end
+
+# ╔═╡ 13a6358a-c8d1-4416-88ce-cca1952438d4
+jtime = @elapsed jgibbs(10000, 500)
+
+# ╔═╡ 404f77df-9004-44a0-8a36-50b2b1c88f6c
+let
+	rtime = rcopy(rgibbs_result)[1]
+	speedup = rtime / jtime
+	
+	Markdown.parse("""
+	!!! note "Similar Coding Effort"
+		But...Julia is $(round(speedup, digits=2)) times faster.
+	""")
+end
 
 # ╔═╡ bab037bb-936a-400f-85b4-e0d6c515d8fe
 md"""
 ## Turing
 
 **Turing** is an ecosystem of Julia packages for Bayesian Inference using *probabilistic programming*.
-"""
 
-# ╔═╡ d918c96c-28b6-421c-8e4e-9cdcdb4b510c
-md"""
-## Bayesian Linear Regression
-
-The Bayesian Regression Model is 
-
-$$y = \alpha + x\beta + \epsilon$$
-
-where 
-
-$y \sim N(\alpha + x\beta, \sigma)$
-$\alpha \sim N(\mu_{\alpha}, \sigma_{\alpha})$
-$\beta \sim N(\mu_{\beta}, \sigma_{\beta})$
-$\sigma \sim Exponential(\lambda_{\sigma})$
+!!! note "Bayesian Linear Regression"
+	- I think it's best to see what probabilistic programming is in action.
+	- [This](https://storopoli.io/Bayesian-Julia/pages/06_linear_reg/) is a great resource.
 """
 
 # ╔═╡ 3d054039-e601-43cd-b04f-6548734a34be
 md"""
-# Machine Learning
+# Machine Learning with MLJ
 
-- The [MLJ](https://github.com/JuliaAI/MLJ.jl) framework brings many machine learning algorithms across packages under a consistent interface.  
+- There are many different packages the implement a handful of machine learning algorithms.
+- The [MLJ](https://github.com/JuliaAI/MLJ.jl) framework brings many algoritms from various packages under a consistent interface.  
 - It's essentially the Julia version of Python's Sci-kit Learn of R's mlr.
+- High learning curve, but a very powerful framework.
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1707,15 +1790,23 @@ version = "1.4.1+1"
 # ╠═a4ccf8b0-88e7-4bfc-b226-6861de84e47b
 # ╠═d56ecaad-3b8d-494e-a55d-85f1c99c724f
 # ╠═ee0a53c1-1bfb-44c2-a4e0-ac45a03e340b
+# ╠═d1f6f634-6150-47da-8915-c5c9252b0379
 # ╠═12cea0ec-035b-4033-93ac-3954d1bff798
 # ╟─47a4463e-1b93-44ba-956e-e0220c3db671
 # ╠═805cb0d3-3e89-4cd4-8a4a-3bdbc20515fe
-# ╟─176e3528-3d31-4df6-980c-cd670d673283
 # ╠═a488b2e6-2660-463e-8f89-c8017f56ca55
 # ╠═34614f4b-1743-405b-a91e-4518ab7eebea
-# ╠═1988d46a-b625-45c8-b581-3a5c0ff3d851
+# ╟─1988d46a-b625-45c8-b581-3a5c0ff3d851
+# ╟─d59726e9-e1d7-4108-8e35-c53fbdd7d357
+# ╟─053e7c27-912e-4487-a271-23d842880b1a
+# ╟─46029c8b-3004-4f8c-8a3f-3b497bf54118
+# ╠═b23b9e33-2902-4f9b-a287-e06f6db84125
+# ╠═86315f2b-9365-4a8e-b2c5-cbd4d005f8d0
+# ╟─7436c067-f1a4-4cee-9ff4-3cc17ce48831
+# ╠═cc8e593c-b725-4481-b86c-a405bc611a48
+# ╠═13a6358a-c8d1-4416-88ce-cca1952438d4
+# ╠═404f77df-9004-44a0-8a36-50b2b1c88f6c
 # ╟─bab037bb-936a-400f-85b4-e0d6c515d8fe
-# ╟─d918c96c-28b6-421c-8e4e-9cdcdb4b510c
-# ╠═3d054039-e601-43cd-b04f-6548734a34be
+# ╟─3d054039-e601-43cd-b04f-6548734a34be
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
