@@ -339,7 +339,9 @@ md"""
 - There are many different packages the implement a handful of machine learning algorithms.
 - The [MLJ](https://github.com/JuliaAI/MLJ.jl) framework brings many algoritms from various packages under a consistent interface.  
 - It's essentially the Julia version of Python's Sci-kit Learn of R's mlr.
-- High learning curve, but a very powerful framework.
+
+!!! note "Personal Opinion"
+	MLJ feels overengineered in places (like having their own tabular data format that isn't a DataFrame), but it's a very powerful framework.
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
