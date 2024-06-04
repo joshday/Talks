@@ -16,6 +16,5 @@ This directory contains the Pluto notebooks for my "Julia for Data Science" shor
 ```julia
 using Pluto
 
-# Assuming your `pwd` is the root of this repository
-Pluto.run(dir = "./2024/sdss2024")
+Pluto.run()
 ```

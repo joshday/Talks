@@ -4,22 +4,16 @@
 using Markdown
 using InteractiveUtils
 
-# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
-macro bind(def, element)
-    quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
-        local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
-        el
-    end
-end
-
-# ╔═╡ 522fac84-0895-11ef-394b-41c5fcdb71ea
+# ╔═╡ f53dfc3e-21e3-11ef-1a3f-03b8bf2a1711
 begin
+	using CSV
+	using DataFrames
+	using Distributions
+	import PlotlyLight
+	using Plots
+	using RCall
 	using Cobweb
 	using PlutoUI
-	import GR
-	import PlotlyBase
 	img(src, style="") = h.img(; src, style="border-radius:8px;$style")
 	md"""
 	(notebook setup)
@@ -27,416 +21,269 @@ begin
 	$(HTML("<style>h1 { padding-top: 200px; }</style>"))
 	$(HTML("<style>h2 { padding-top: 100px; }</style>"))
 	$(HTML("<style>h3 { padding-top: 50px; }</style>"))
+	$(HTML("<style>h4 { padding-top: 50px; }</style>"))
 	"""
 end
 
-# ╔═╡ 36039832-ed3a-46d1-bebf-125fc77252df
-using Plots
+# ╔═╡ e7b2b269-2902-46f8-bc1e-af5384b4d1bc
+using StatsModels
 
-# ╔═╡ 5fdf808c-0481-4df4-afb7-eccfa935e9e9
-using LaTeXStrings  # Enables writing LaTeX via L"\beta"
+# ╔═╡ f15a7851-48bf-4f3c-8b6c-096a46b44ce2
+using GLM
 
-# ╔═╡ 6d36abc0-0df8-48d4-95b6-e771e80b5004
-using DataFrames, StatsPlots
-
-# ╔═╡ b29f31cb-cb76-4f73-8b9a-4ec3bbac5031
-using Distributions
-
-# ╔═╡ f32e1efd-1284-408f-9bbf-60c53a6ad92a
+# ╔═╡ 95acbdbd-6c19-486d-94e9-28953fe665d5
 md"""
-!!! info "Which Package Should I Use?"
-	- Plots.jl is the most-used for a reason.  It's very powerful and interops with Julia packages so that often `plot(something)` "just works"™.
-	- If you are working headless (e.g. SSH-ing into a remote server), you might prefer UnicodePlots.jl to have plots display in your terminal.
+# Generalized Linear Models
 """
 
-# ╔═╡ 981587d0-4284-46e6-a97b-1dc801ef2c41
+# ╔═╡ 04d0ff60-f0f7-4b48-9a2b-242e76a0b2e7
+let
+	h = Cobweb.h
+	md"""
+	## Statistical Formulas
+	
+	!!! note "StatsModels"
+		Julia doesn't have a formula type built-in like R does.  It is provided by teh StatsModels package
+	
+	!!! aside "Formulas must be a macro"
+		Think about why.
+	"""
+end
+
+# ╔═╡ 9b069810-320e-45ee-9e46-507582d3eab9
+let 
+	h = Cobweb.h
+
+	h.details(
+		h.summary("Why must formulas be a macro?"),
+		h.p(md"""
+		- We are changing the meaning of valid Julia syntax.
+		- E.g. `1 + x` already has meaning in Julia, but we want this to mean add an intercept and a main effect for variable `x`.
+		- Macros are how you can write DSLs (Domain Specific Languages) in Julia.
+		""")
+	)
+end
+
+# ╔═╡ b0a93250-af6c-4601-9451-3e3a28aeeab9
 md"""
-!!! note "Honorable Mention: Makie"
-	[Makie](https://docs.makie.org/stable/) (pronounced "Mah-Kee") has a steeper learning curve than Plots, but it:
-	1. Is Julia all the way down.
-	2. Is optimized for large Plots.
-	3. Is more flexible than Plots (hence more complexity).
+### Formula DSL
+
+!!! aside "@formula"
+	The formula DSL in **StatsModels** will be familiar to users of other statistical software:
+
+	1. `~` is  the formula separator, where the left- and right-hand sides are the dependent/response and independent/predictors variables, respectively.
+	2. `+` concatenates columns/separates terms.
+	3. `&` represents an interaction term.
+	4. `*` expands to all main effects and interactions between terms.
+	5. `1` represents an intercept column whereas `0` or `-1` marks the absence of an intercept.
+
+!!! warning "No catchall term `.`"
+	- Unlike R, you cannot use `.` to mean "everything that wasn't used on the left-hand side of the formula".
+	- However, you can build the formula programmatically (without using the `@formula` macro).
+	
 """
 
-# ╔═╡ c7dc808e-18ca-4d19-b982-658716ab9317
+# ╔═╡ 32565401-ae72-4d56-bdb7-7558ea2b6b42
+@formula y ~ 1 + x
+
+# ╔═╡ 58f89858-a373-41a4-b71f-b7d87bb6302d
+let 
+	lhs = term(:y)
+	
+	rhs = (term(1), term(:x))
+	
+	FormulaTerm(lhs, rhs)
+end
+
+# ╔═╡ 922a21aa-8596-4cb2-9fe0-aae9c548c7b6
+begin
+	penguins_url = "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/penguins.csv"
+	
+	penguins_file = download(penguins_url)
+	
+	df = dropmissing!(CSV.read(penguins_file, DataFrame))
+
+	md"""
+	### Real Data: Penguins (Again)
+
+	(Loaded in this Pluto cell)
+	"""
+end
+
+# ╔═╡ 53497114-d741-426f-bd3f-fe66491d6997
+md"!!! note \"The @formula way\""
+
+# ╔═╡ 3da56149-50e1-44ce-8886-80cc8b67e427
+@formula species ~ 1 + island + bill_length_mm + bill_depth_mm + 
+				   flipper_length_mm + body_mass_g + sex
+
+# ╔═╡ 41753b49-c314-40e9-951b-6bd9ed74add3
+md"""!!! note "The Programmatic Way" """
+
+# ╔═╡ 0c053542-8e6f-4135-992e-abac32be47c3
+let 
+	lhs = term(:species)
+
+	subset = select(df, Not(:species))
+
+	rhs = Tuple(term.(names(subset)))
+
+	FormulaTerm(lhs, rhs)
+end
+
+# ╔═╡ 6d9891c2-b78c-4c17-b47c-1dd70c45df94
 md"""
-# Aside: `@details` Macro 
+## Linear Regression
 
-- Browsers often don't do well with image-heavy pages.
-- To ease the burden on viewing this plot-heavy notebook in your browser, let's write a macro to hide plots when we're not viewing them.  
+- The [**GLM**](https://juliastats.org/GLM.jl/dev/) package provides an `lm` function that behaves similarly to R.
 
-We can use the `<details>` HTML tag to create "foldable" content.  We want the underlying HTML to look like:
+!!! note "GLM"
+	- Much of R's (generalized) linear model capabilities have been ported into GLM.jl.
+	- Doug Bates (`nlme4` author, R core member) is the primary author of GLM.  
+"""
 
-```html
-<details>
-	<summary><code>Expression</code></summary>
-	Result of Expression
-</details>
+# ╔═╡ cebbb799-229a-405c-a9f2-7dbcdd7a4079
+begin 
+	β = [1, 2]
+	x = randn(100, 2)
+	y = x * β + randn(100)
+
+	# You can pass x (Matrix) and y (Vector) arguments
+	lm(x, y)
+
+	# Or a formula with a DataFrame
+	temp_df = DataFrame(x1=x[:, 1], x2=x[:, 2], y=y)
+	
+	model1 = lm(@formula(y ~ 0 + x1 + x2), temp_df)
+end
+
+# ╔═╡ 97011870-35ca-42c9-8bac-5ff9c8786062
+md"""
+### Model Interface
+"""
+
+# ╔═╡ 5a02371c-6401-4a11-aa2e-111679b5f5c2
+fitted(model1)
+
+# ╔═╡ c9da90d1-d32c-4c0c-809f-0d58f8ed1f3f
+residuals(model1)
+
+# ╔═╡ 7ca3d333-f13a-4798-a334-2aa5275dc8c8
+coef(model1)
+
+# ╔═╡ a4ccf8b0-88e7-4bfc-b226-6861de84e47b
+stderror(model1)
+
+# ╔═╡ d56ecaad-3b8d-494e-a55d-85f1c99c724f
+confint(model1)
+
+# ╔═╡ ee0a53c1-1bfb-44c2-a4e0-ac45a03e340b
+loglikelihood(model1)
+
+# ╔═╡ 12cea0ec-035b-4033-93ac-3954d1bff798
+let 
+	scatter(residuals(model1), lab=nothing, title="Residual Plot")
+
+	# Note that the plot wasn't given as an argument to hline.  
+	# How did the function know which plot to mutate?
+	hline!([0], lab=nothing)
+end
+
+# ╔═╡ 47a4463e-1b93-44ba-956e-e0220c3db671
+md"""
+## Logistic Regression
+
+- Fittings GLMs take the form of:
+
+```
+glm(formula, df, family, link)
 ```
 """
 
-# ╔═╡ 02088989-68c4-481b-b9df-59863e27637c
-# Remember: macro input/output is an `Expr`
-macro details(ex)
-	# Remove unused parts of the Expr
-	ex = Base.remove_linenums!(ex) 
-	
-	# HTML writer function
-	h = Cobweb.h  
+# ╔═╡ 805cb0d3-3e89-4cd4-8a4a-3bdbc20515fe
+model2 = let 
+	# Response values needs to be in [0, 1]
+	temp = transform(df, :sex => ByRow(x -> x == "MALE") => "m1")
 
-	# If code is multi-line use <pre>.  Otherwise use <code>.
-	code = ex.head in [:block, :let] ? h.pre(string(ex)) : h.code(string(ex))
+	f = @formula(m1 ~ 1 + species * body_mass_g)
 
-	# Return the Expr
-	esc(:(h.details(h.summary($code), $ex)))
+	glm(f, temp, Bernoulli(), LogitLink())
 end
 
-# ╔═╡ 68c0ffa5-850e-4aba-b3b9-a72856ddb477
+# ╔═╡ 176e3528-3d31-4df6-980c-cd670d673283
 md"""
-!!! aside "Let's test it out"
-	Question: Why does this need to be a macro?  Why not a function?
+!!! note "Interface is the Same as for `lm`"
 """
 
-# ╔═╡ 06ca47ca-382e-42ce-b1fb-9b3017ffe4a0
-@details 1 + 1
+# ╔═╡ a488b2e6-2660-463e-8f89-c8017f56ca55
+fitted(model2)
 
-# ╔═╡ ed6284d8-ade5-45fa-85a2-75786a92be61
-md"# Plots.jl"
+# ╔═╡ 34614f4b-1743-405b-a91e-4518ab7eebea
+coef(model2)
 
-# ╔═╡ 0ec66192-5700-4b88-b6bf-63969eee9970
+# ╔═╡ 1988d46a-b625-45c8-b581-3a5c0ff3d851
 md"""
-## Basic Usage
+# Bayesian Statistics
 
-!!! aside "The core function is `plot(data...; attributes...)`"
-	- `data`: What to plot.
-	- `attributes`: How to plot it.
+- Great resource [here](https://storopoli.io/Bayesian-Julia/).
 """
 
-# ╔═╡ 4c30e8ba-2aac-4d56-9d8a-dfce73f6fc0e
-@details plot(randn(10))
-
-# ╔═╡ 0c98363f-3aba-47f0-b017-d1cdc6e222e2
-@details plot(randn(10), randn(10); seriestype = :scatter)
-
-# ╔═╡ 5ea8d96a-3e12-429a-b2f6-f51311cc3da0
-@details plot(randn(10), randn(10), randn(10); seriestype=:scatter)
-
-# ╔═╡ 67e29bfe-cbee-4390-8841-b8fae458baf2
-@details plot(sin, 0, 2pi; label="sin(x)")
-
-# ╔═╡ 763ae914-46b9-4061-945e-80f331083273
+# ╔═╡ bab037bb-936a-400f-85b4-e0d6c515d8fe
 md"""
-## Every Column is a *Series*
+## Turing
 
-A Series is a set of related observations.
+**Turing** is an ecosystem of Julia packages for Bayesian Inference using *probabilistic programming*.
 """
 
-# ╔═╡ e177b63d-a9b8-48eb-8114-3877d1379ab1
+# ╔═╡ d918c96c-28b6-421c-8e4e-9cdcdb4b510c
 md"""
-!!! aside "Matrix Data"
-	E.g. a 10×3 Matrix produces 3 series with 10 observations each.
+## Bayesian Linear Regression
+
+The Bayesian Regression Model is 
+
+$$y = \alpha + x\beta + \epsilon$$
+
+where 
+
+$y \sim N(\alpha + x\beta, \sigma)$
+$\alpha \sim N(\mu_{\alpha}, \sigma_{\alpha})$
+$\beta \sim N(\mu_{\beta}, \sigma_{\beta})$
+$\sigma \sim Exponential(\lambda_{\sigma})$
 """
 
-# ╔═╡ ec8ebc08-f03e-4886-8f77-bd65b70b94c0
-@details plot(rand(10, 3)) 
-
-# ╔═╡ b4bc520a-4ab9-486e-9825-0dfa1129b487
+# ╔═╡ 3d054039-e601-43cd-b04f-6548734a34be
 md"""
-!!! aside "Passing Attributes *By Column*"
-	Keyword arguments can also be mapped to associated series by column.
-"""
+# Machine Learning
 
-# ╔═╡ 6b94f7c0-28d8-46f0-98f3-9c774244ba29
-@details plot(rand(10,3), label=["one" "two" "three"], seriestype=["scatter" "line"])
-
-# ╔═╡ cdfeef39-2e07-4a6f-a6dd-687a8a084637
-md"""
-## Each *Series Type* has a Corresponding Function
-
-E.g. `plot(x; seriestype=:scatter) == scatter(x)`
-"""
-
-# ╔═╡ f6cf7433-6ddb-430b-9544-8e2476adf718
-md"Choose Series Type: $(@bind seriestype Select([nothing, :scatter, :histogram2d]))"
-
-# ╔═╡ 27decde3-18ee-46ba-b0e6-9d0ab2fc7abc
-x = randn(100); y = randn(100);
-
-# ╔═╡ fad45705-0e18-432a-9d8f-598abe3bbeb2
-if isnothing(seriestype)
-	md"(no seriestype chosen above)"
-else
-	@info "$seriestype(x, y)"
-	getproperty(Plots, seriestype)(x, y)
-end
-
-# ╔═╡ 3cc62e5c-548e-4601-827b-beaacbada118
-md"## Plots can be Mutated"
-
-# ╔═╡ a79a70b5-1486-444a-9660-17df271b83e9
-@details p1 = plot(10:-1:1)
-
-# ╔═╡ 3a20eb1c-5a85-4d08-bd6d-c71ccb7cc4ae
-@details scatter!(p1, 1:10; seriestype=:scatter)
-
-# ╔═╡ 4f57dad5-ff3e-4c80-b2ed-6f24ee74eb23
-md"""
-!!! aside "Attributes have Mutating Functions Too"
-	E.g. `title!`, `label!`, etc.
-
-"""
-
-# ╔═╡ 9eda1a58-c7f7-42cf-821a-972c231294da
-@details title!(p1, "My Title")
-
-# ╔═╡ e40ab538-4be4-4ba7-baf2-a1e63865cdf3
-md"""
-## There are Multiple *Backends*
-
-Backends have a corresponding function, e.g.
-
-- `gr()` (static plots for publications, etc.)
-- `plotly()` (interactive Javascript plots for dashboards, etc.)
-
-!!! aside "Demo"
-	We'll demonstrate this in the REPL.  Typically these functions will only be called once at the beginning of a script.
-"""
-
-# ╔═╡ 4b06d302-a324-411a-a245-b15d22fab706
-md"""
-## Attributes have *Aliases*
-
-Plots comes with built-in shorthands for common attributes, e.g.
-
-- `ms` for `markersize`
-- `st` for `seriestype`
-- `lab` for `label`
-"""
-
-# ╔═╡ 6e8b7445-c52b-4ff6-8459-503fe59d47f7
-@details scatter(x, ms=10, lab="Label")
-
-# ╔═╡ f989c223-4f4b-470b-9f22-b10338297235
-md"""
-
-!!! aside "Magic Arguments"
-	Some attributes allow *magic arguments*, a Tuple of values that will map naturally to an attribute based on the type.
-
-	E.g. `m = (10, 0.5, "green")` maps `marker` attributes:
-	- `markersize = 10`
-	- `markeralpha = 0.5`
-	- `markercolor = "green"`
-"""
-
-# ╔═╡ cb19dbd5-4841-4747-b211-f253c5359223
-@details scatter(x, m=(10, .5, "green"))
-
-# ╔═╡ c9d82ed5-6017-4bed-b327-09dc7a5c9905
-md"""
-
-# Subplots/Layout
-
-- See [https://docs.juliaplots.org/latest/layouts/](https://docs.juliaplots.org/latest/layouts/) for more details.
-"""
-
-# ╔═╡ 81b37317-5089-4f6c-a494-af5210bbcb1c
-@details plot(rand(10,4), layout=4)
-
-# ╔═╡ 455723ad-c29e-418b-b21e-31a51eb70f0b
-@details plot(rand(10, 4), layout = (2, 1))
-
-# ╔═╡ 1f509dcc-4396-436d-931a-bbe35e34185b
-@details let 
-	p1 = plot(x)
-	p2 = plot(y)
-	plot(p1, p2)
-end
-
-# ╔═╡ fa571e4b-7f44-4a35-9a56-7b28add60349
-md"""
-!!! aside "Aside: Macros Within Macros"
-	Nested macros are not expanded.  E.g. in the expressions `@x @y expr`, `@x` is applied first and `@y` second.
-
-	In order to demonstrate Plots.jl's `@layout` macro, we'll remove `@details`.
-"""
-
-# ╔═╡ c862dcff-7bd2-440b-8973-13259c48e6ce
-let 
-	p1 = bar(x)
-	p2 = scatter(y)
-	l = @layout [ a{0.7w} b{0.3w}]
-	plot(p1, p2, layout=l)
-end;  # Remove the `;` to display the plot
-
-# ╔═╡ 9add3a5f-cfb5-440e-a51a-16d3729c0bb0
-md"""
-# Recipes
-
-A plot *recipe* is a mechanism for extending Plots without the need to depend on the entire Plots.jl package (see [RecipesBase docs](https://docs.juliaplots.org/dev/RecipesBase/)).
-"""
-
-# ╔═╡ a3ef43c8-e22c-4648-95fe-900fd69fe305
-let
-	# Suppose we have a struct that represents fitted regression coefficients
-	struct LinRegModel
-		β::Vector{Float64}
-	end
-
-	# Let's tell Plots.jl how this type should be plotted.
-	# Keyword arguments are set via `-->`
-	# Positional arguments are returned at the end of the function.
-	@recipe function f(lm::LinRegModel)
-		seriestype --> :bar
-		title --> "LinRegModel Coefficients"
-		legend --> false
-		color --> "black"
-		alpha --> 0.5
-		xlabel --> "Coefficient"
-		ylabel --> "Value"
-		[L"\beta_{%$i}" for i in 1:length(lm.β)], lm.β  # Return data (x and y)
-	end
-
-	# Test it out:
-	plot(LinRegModel(1:10))
-end;
-
-# ╔═╡ 82cc14f2-bbe0-4aec-abbf-a349c9971768
-md"""
-!!! aside "Why Write a Recipe vs. a Function?"
-	A recipe will automatically work with the rest of the machinery in Plots, such as exposing all of the Plots attributes.  E.g. `plot(my_type; linecolor="red")` will "just work".
-"""
-
-# ╔═╡ b4dd25df-0918-4d36-b4e1-57a2b072b28a
-md"""
-## StatsPlots
-
-The **StatsPlots** package provides a large collection of plot recipes for all things statistics.
-"""
-
-# ╔═╡ 213244c3-1e6a-46cc-b766-954f178b2a79
-df = DataFrame(x=randn(100), y=randn(100));
-
-# ╔═╡ b1d22775-9282-46d2-875e-47cf907b456a
-md"""
-### The `@df` macro
-"""
-
-# ╔═╡ ad04582d-5490-4ae8-a8e6-f6ef07cb7d02
-# The @df macro lets you refer to column names directly
-@df df scatter(x, y);
-
-# ╔═╡ c3ec4203-7783-426f-8d5e-b5227d66166c
-md"""
-### Type Recipes
-"""
-
-# ╔═╡ 74f763fa-bf91-43c1-b0ea-f09349a139be
-plot(Normal())
-
-# ╔═╡ ddbdb3b4-69c8-4bce-810d-f1791bb7a87a
-md"""
-### New Plot Functions
-"""
-
-# ╔═╡ 9c11d820-4c4a-4d30-bbb7-11dda1d0b1ae
-@details violin(randn(100, 3), linewidth=0, alpha=.5)
-
-# ╔═╡ 383c6327-c982-420f-8bc6-24869774c1b7
-@details boxplot(randn(100, 3))
-
-# ╔═╡ 349b2b41-5900-41ed-ba39-78b6a2274c3e
-@details qqplot(randn(1000), randn(1000))
-
-# ╔═╡ 736fe7c6-85e3-4e6b-9212-53d520863e31
-md"""
-# Animations
-
-Plots has some great utilities for generating gifs.
-"""
-
-# ╔═╡ 563c5e67-ef8d-40cf-9dc1-52375a330645
-let
-	data = [0.0]
-	@gif for i in 1:100
-		push!(data, data[end] + randn() / i)
-		plot(data, lab=nothing)
-	end
-end
-
-# ╔═╡ 49b1aa14-07d1-40e0-8278-4d4613cb2ce8
-md"""
-# Themes
-
-The plot theme can be set e.g. `theme(:ggplot2)`.
-"""
-
-# ╔═╡ fc8ee68f-4157-48bd-b287-ad7f4fae1841
-md"Choose Theme: $(@bind plot_theme Select([:default, :dark, :ggplot2, :juno, :lime, :sand, :solarized, :solarized_light, :wong, :wong2, :gruvbox_dark, :gruvbox_light, :bright, :vibrant, :mute, :dao, :dracula]))"
-
-# ╔═╡ 4d10503d-7e4f-4cf8-84a5-5dd2e98a58d8
-begin
-	@info plot_theme
-	Plots.showtheme(plot_theme)
-end
-
-# ╔═╡ 877d5a4d-ef2b-4329-a810-7bc6e158cfb3
-md"# Notebook Utility Functions"
-
-# ╔═╡ 42a20eab-c3e0-41c2-86ff-59cc1c6ff168
-downloads_badge(pkg) = Markdown.parse("""
-[![Downloads](https://img.shields.io/badge/dynamic/json?url=http%3A%2F%2Fjuliapkgstats.com%2Fapi%2Fv1%2Fmonthly_downloads%2F$pkg&query=total_requests&suffix=%2Fmonth&label=Downloads)](https://juliapkgstats.com/pkg/$pkg)
-""")
-
-# ╔═╡ 2955a447-6308-4230-a495-19253eead7b6
-md"""
-# Plotting Packages
-
-
-!!! aside "What to Choose?"
-	There is no built-in plotting functionality in Julia.  
-
-	There are many to choose from.  
-
-	Here is a [very good Discourse post](https://discourse.julialang.org/t/comparison-of-plotting-packages/99860/2) that compare various packages. 
-
-## Download Stats
-
-Package | Downloads
---------|----------
-Plots | $(downloads_badge("Plots"))
-PlotlyJS | $(downloads_badge("PlotlyJS"))
-Makie | $(downloads_badge("Makie"))
-PyPlot | $(downloads_badge("PyPlot"))
-UnicodePlots | $(downloads_badge("UnicodePlots"))
-Gadfly | $(downloads_badge("Gadfly"))
-Vega | $(downloads_badge("Vega"))
-VegaLite | $(downloads_badge("VegaLite"))
-PlotlyLight | $(downloads_badge("PlotlyLight"))
+- The [MLJ](https://github.com/JuliaAI/MLJ.jl) framework brings many machine learning algorithms across packages under a consistent interface.  
+- It's essentially the Julia version of Python's Sci-kit Learn of R's mlr.
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 Cobweb = "ec354790-cf28-43e8-bb59-b484409b7bad"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
-GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
-LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
-PlotlyBase = "a03496cd-edff-5a9b-9e67-9cda94a718b5"
+GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
+PlotlyLight = "ca7969ec-10b3-423e-8d99-40f33abb42bf"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
+RCall = "6f49c342-dc21-5d91-9882-a32aef131414"
+StatsModels = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
 
 [compat]
+CSV = "~0.10.14"
 Cobweb = "~0.6.1"
 DataFrames = "~1.6.1"
 Distributions = "~0.25.109"
-GR = "~0.73.5"
-LaTeXStrings = "~1.3.1"
-PlotlyBase = "~0.8.19"
+GLM = "~1.9.0"
+PlotlyLight = "~0.9.1"
 Plots = "~1.40.4"
 PlutoUI = "~0.7.59"
-StatsPlots = "~0.15.7"
+RCall = "~0.14.1"
+StatsModels = "~0.7.3"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -445,34 +292,13 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.3"
 manifest_format = "2.0"
-project_hash = "2d9a595be0564825b4c094ad28bdf6872ddd7054"
-
-[[deps.AbstractFFTs]]
-deps = ["LinearAlgebra"]
-git-tree-sha1 = "d92ad398961a3ed262d8bf04a1a2b8340f915fef"
-uuid = "621f4979-c628-5d54-868e-fcf4e3e8185c"
-version = "1.5.0"
-weakdeps = ["ChainRulesCore", "Test"]
-
-    [deps.AbstractFFTs.extensions]
-    AbstractFFTsChainRulesCoreExt = "ChainRulesCore"
-    AbstractFFTsTestExt = "Test"
+project_hash = "6a4afd0cff1465c5b681fbb2a2fc71241f326fd6"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
 git-tree-sha1 = "6e1d2a35f2f90a4bc7c2ed98079b2ba09c35b83a"
 uuid = "6e696c72-6542-2067-7265-42206c756150"
 version = "1.3.2"
-
-[[deps.Adapt]]
-deps = ["LinearAlgebra", "Requires"]
-git-tree-sha1 = "6a55b747d1812e699320963ffde36f1ebdda4099"
-uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
-version = "4.0.4"
-weakdeps = ["StaticArrays"]
-
-    [deps.Adapt.extensions]
-    AdaptStaticArraysExt = "StaticArrays"
 
 [[deps.AliasTables]]
 deps = ["PtrArrays", "Random"]
@@ -484,26 +310,8 @@ version = "1.1.3"
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
 version = "1.1.1"
 
-[[deps.Arpack]]
-deps = ["Arpack_jll", "Libdl", "LinearAlgebra", "Logging"]
-git-tree-sha1 = "9b9b347613394885fd1c8c7729bfc60528faa436"
-uuid = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
-version = "0.5.4"
-
-[[deps.Arpack_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "OpenBLAS_jll", "Pkg"]
-git-tree-sha1 = "5ba6c757e8feccf03a1554dfaf3e26b3cfc7fd5e"
-uuid = "68821587-b530-5797-8361-c406ea357684"
-version = "3.5.1+1"
-
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
-
-[[deps.AxisAlgorithms]]
-deps = ["LinearAlgebra", "Random", "SparseArrays", "WoodburyMatrices"]
-git-tree-sha1 = "01b8ccb13d68535d73d2b0c23e39bd23155fb712"
-uuid = "13072b0f-2c55-5437-9ae7-d433b7a33950"
-version = "1.1.0"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -519,6 +327,12 @@ git-tree-sha1 = "9e2a6b69137e6969bab0152632dcb3bc108c8bdd"
 uuid = "6e34b625-4abd-537c-b88f-471c36dfa7a0"
 version = "1.0.8+1"
 
+[[deps.CSV]]
+deps = ["CodecZlib", "Dates", "FilePathsBase", "InlineStrings", "Mmap", "Parsers", "PooledArrays", "PrecompileTools", "SentinelArrays", "Tables", "Unicode", "WeakRefStrings", "WorkerUtilities"]
+git-tree-sha1 = "6c834533dc1fabd820c1db03c839bf97e45a3fab"
+uuid = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+version = "0.10.14"
+
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
 git-tree-sha1 = "a2f1c8c668c8e3cb4cca4e57a8efdb09067bb3fd"
@@ -531,21 +345,18 @@ git-tree-sha1 = "f641eb0a4f00c343bbc32346e1217b86f3ce9dad"
 uuid = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
 version = "0.5.1"
 
-[[deps.ChainRulesCore]]
-deps = ["Compat", "LinearAlgebra"]
-git-tree-sha1 = "575cd02e080939a33b6df6c5853d14924c08e35b"
-uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.23.0"
-weakdeps = ["SparseArrays"]
+[[deps.CategoricalArrays]]
+deps = ["DataAPI", "Future", "Missings", "Printf", "Requires", "Statistics", "Unicode"]
+git-tree-sha1 = "1568b28f91293458345dabba6a5ea3f183250a61"
+uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
+version = "0.10.8"
+weakdeps = ["JSON", "RecipesBase", "SentinelArrays", "StructTypes"]
 
-    [deps.ChainRulesCore.extensions]
-    ChainRulesCoreSparseArraysExt = "SparseArrays"
-
-[[deps.Clustering]]
-deps = ["Distances", "LinearAlgebra", "NearestNeighbors", "Printf", "Random", "SparseArrays", "Statistics", "StatsBase"]
-git-tree-sha1 = "9ebb045901e9bbf58767a9f34ff89831ed711aae"
-uuid = "aaaa29a8-35af-508c-8bc3-b662a17a0fe5"
-version = "0.15.7"
+    [deps.CategoricalArrays.extensions]
+    CategoricalArraysJSONExt = "JSON"
+    CategoricalArraysRecipesBaseExt = "RecipesBase"
+    CategoricalArraysSentinelArraysExt = "SentinelArrays"
+    CategoricalArraysStructTypesExt = "StructTypes"
 
 [[deps.Cobweb]]
 deps = ["DefaultApplication", "OrderedCollections", "Scratch"]
@@ -608,6 +419,12 @@ git-tree-sha1 = "6cbbd4d241d7e6579ab354737f4dd95ca43946e1"
 uuid = "f0e56b4a-5159-44fe-b623-3e5288b988bb"
 version = "2.4.1"
 
+[[deps.Conda]]
+deps = ["Downloads", "JSON", "VersionParsing"]
+git-tree-sha1 = "51cab8e982c5b598eea9c8ceaced4b58d9dd37c9"
+uuid = "8f4d0f93-b110-5947-807f-2305c1781a2d"
+version = "1.10.0"
+
 [[deps.Contour]]
 git-tree-sha1 = "439e35b0b36e2e5881738abc8857bd92ad6ff9a8"
 uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
@@ -656,21 +473,6 @@ git-tree-sha1 = "9e2f36d3c96a820c678f2f1f1782582fcf685bae"
 uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 version = "1.9.1"
 
-[[deps.Distances]]
-deps = ["LinearAlgebra", "Statistics", "StatsAPI"]
-git-tree-sha1 = "66c4c81f259586e8f002eacebc177e1fb06363b0"
-uuid = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
-version = "0.10.11"
-weakdeps = ["ChainRulesCore", "SparseArrays"]
-
-    [deps.Distances.extensions]
-    DistancesChainRulesCoreExt = "ChainRulesCore"
-    DistancesSparseArraysExt = "SparseArrays"
-
-[[deps.Distributed]]
-deps = ["Random", "Serialization", "Sockets"]
-uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
-
 [[deps.Distributions]]
 deps = ["AliasTables", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns"]
 git-tree-sha1 = "9c405847cc7ecda2dc921ccf18b47ca150d7317e"
@@ -704,6 +506,12 @@ git-tree-sha1 = "5837a837389fccf076445fce071c8ddaea35a566"
 uuid = "fa6b7ba4-c1ee-5f82-b5fc-ecf0adba8f74"
 version = "0.6.8"
 
+[[deps.EasyConfig]]
+deps = ["JSON3", "OrderedCollections", "StructTypes"]
+git-tree-sha1 = "11fa8ecd53631b01a2af60e16795f8b4731eb391"
+uuid = "acab07b0-f158-46d4-8913-50acef6d41fe"
+version = "0.1.16"
+
 [[deps.EpollShim_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "8e9441ee83492030ace98f9789a654a6d0b1f643"
@@ -734,17 +542,11 @@ git-tree-sha1 = "466d45dc38e15794ec7d5d63ec03d776a9aff36e"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
 version = "4.4.4+1"
 
-[[deps.FFTW]]
-deps = ["AbstractFFTs", "FFTW_jll", "LinearAlgebra", "MKL_jll", "Preferences", "Reexport"]
-git-tree-sha1 = "4820348781ae578893311153d69049a93d05f39d"
-uuid = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
-version = "1.8.0"
-
-[[deps.FFTW_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "c6033cc3892d0ef5bb9cd29b7f2f0331ea5184ea"
-uuid = "f5851436-0d7a-5f13-b9de-f02708fd171a"
-version = "3.3.10+0"
+[[deps.FilePathsBase]]
+deps = ["Compat", "Dates", "Mmap", "Printf", "Test", "UUIDs"]
+git-tree-sha1 = "9f00e42f8d99fdde64d40c8ea5d14269a2e2c1aa"
+uuid = "48062228-2e41-5def-b9a4-89aafe57970f"
+version = "0.9.21"
 
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
@@ -799,6 +601,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Libglvnd_jll", "Xorg_libXcursor_jl
 git-tree-sha1 = "ff38ba61beff76b8f4acad8ab0c97ef73bb670cb"
 uuid = "0656b61e-2033-5cc2-a64a-77c0f6c09b89"
 version = "3.3.9+0"
+
+[[deps.GLM]]
+deps = ["Distributions", "LinearAlgebra", "Printf", "Reexport", "SparseArrays", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns", "StatsModels"]
+git-tree-sha1 = "273bd1cd30768a2fddfa3fd63bbc746ed7249e5f"
+uuid = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
+version = "1.9.0"
 
 [[deps.GR]]
 deps = ["Artifacts", "Base64", "DelimitedFiles", "Downloads", "GR_jll", "HTTP", "JSON", "Libdl", "LinearAlgebra", "Preferences", "Printf", "Random", "Serialization", "Sockets", "TOML", "Tar", "Test", "p7zip_jll"]
@@ -877,25 +685,9 @@ git-tree-sha1 = "9cc2baf75c6d09f9da536ddf58eb2f29dedaf461"
 uuid = "842dd82b-1e85-43dc-bf29-5d0ee9dffc48"
 version = "1.4.0"
 
-[[deps.IntelOpenMP_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "be50fe8df3acbffa0274a744f1a99d29c45a57f4"
-uuid = "1d5cc7b8-4909-519e-a0f8-d0f5ad9712d0"
-version = "2024.1.0+0"
-
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
-
-[[deps.Interpolations]]
-deps = ["Adapt", "AxisAlgorithms", "ChainRulesCore", "LinearAlgebra", "OffsetArrays", "Random", "Ratios", "Requires", "SharedArrays", "SparseArrays", "StaticArrays", "WoodburyMatrices"]
-git-tree-sha1 = "88a101217d7cb38a7b481ccd50d21876e1d1b0e0"
-uuid = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
-version = "0.15.1"
-weakdeps = ["Unitful"]
-
-    [deps.Interpolations.extensions]
-    InterpolationsUnitfulExt = "Unitful"
 
 [[deps.InvertedIndices]]
 git-tree-sha1 = "0dc7b50b8d436461be01300fd8cd45aa0274b038"
@@ -930,17 +722,23 @@ git-tree-sha1 = "31e996f0a15c7b280ba9f76636b3ff9e2ae58c9a"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "0.21.4"
 
+[[deps.JSON3]]
+deps = ["Dates", "Mmap", "Parsers", "PrecompileTools", "StructTypes", "UUIDs"]
+git-tree-sha1 = "eb3edce0ed4fa32f75a0a11217433c31d56bd48b"
+uuid = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
+version = "1.14.0"
+
+    [deps.JSON3.extensions]
+    JSON3ArrowExt = ["ArrowTypes"]
+
+    [deps.JSON3.weakdeps]
+    ArrowTypes = "31f734f8-188a-4ce0-8406-c8a06bd891cd"
+
 [[deps.JpegTurbo_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "c84a835e1a09b289ffcd2271bf2a337bbdda6637"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
 version = "3.0.3+0"
-
-[[deps.KernelDensity]]
-deps = ["Distributions", "DocStringExtensions", "FFTW", "Interpolations", "StatsBase"]
-git-tree-sha1 = "7d703202e65efa1369de1279c162b915e245eed1"
-uuid = "5ab0869b-81aa-558d-bb23-cbf5423bbe9b"
-version = "0.6.9"
 
 [[deps.LAME_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -984,10 +782,6 @@ version = "0.16.3"
     [deps.Latexify.weakdeps]
     DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
     SymEngine = "123dc426-2d89-5057-bbad-38513e3affd8"
-
-[[deps.LazyArtifacts]]
-deps = ["Artifacts", "Pkg"]
-uuid = "4af54fe1-eca0-43a8-85a7-787d91b784e3"
 
 [[deps.LibCURL]]
 deps = ["LibCURL_jll", "MozillaCACerts_jll"]
@@ -1070,9 +864,9 @@ uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.LogExpFunctions]]
 deps = ["DocStringExtensions", "IrrationalConstants", "LinearAlgebra"]
-git-tree-sha1 = "18144f3e9cbe9b15b070288eef858f71b291ce37"
+git-tree-sha1 = "a2d09619db4e765091ee5c6ffe8872849de0feea"
 uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
-version = "0.3.27"
+version = "0.3.28"
 
     [deps.LogExpFunctions.extensions]
     LogExpFunctionsChainRulesCoreExt = "ChainRulesCore"
@@ -1097,12 +891,6 @@ version = "1.0.3"
 git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
 uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
 version = "0.1.4"
-
-[[deps.MKL_jll]]
-deps = ["Artifacts", "IntelOpenMP_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "oneTBB_jll"]
-git-tree-sha1 = "80b2833b56d466b3858d565adcd16a4a05f2089b"
-uuid = "856f044c-d86e-5d09-b602-aeab76dc8ba7"
-version = "2024.1.0+0"
 
 [[deps.MacroTools]]
 deps = ["Markdown", "Random"]
@@ -1143,41 +931,15 @@ uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
 version = "2023.1.10"
 
-[[deps.MultivariateStats]]
-deps = ["Arpack", "LinearAlgebra", "SparseArrays", "Statistics", "StatsAPI", "StatsBase"]
-git-tree-sha1 = "68bf5103e002c44adfd71fea6bd770b3f0586843"
-uuid = "6f286f6a-111f-5878-ab1e-185364afe411"
-version = "0.10.2"
-
 [[deps.NaNMath]]
 deps = ["OpenLibm_jll"]
 git-tree-sha1 = "0877504529a3e5c3343c6f8b4c0381e57e4387e4"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 version = "1.0.2"
 
-[[deps.NearestNeighbors]]
-deps = ["Distances", "StaticArrays"]
-git-tree-sha1 = "ded64ff6d4fdd1cb68dfcbb818c69e144a5b2e4c"
-uuid = "b8a86587-4115-5ab1-83bc-aa920d37bbce"
-version = "0.4.16"
-
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 version = "1.2.0"
-
-[[deps.Observables]]
-git-tree-sha1 = "7438a59546cf62428fc9d1bc94729146d37a7225"
-uuid = "510215fc-4207-5dde-b226-833fc4488ee2"
-version = "0.5.5"
-
-[[deps.OffsetArrays]]
-git-tree-sha1 = "e64b4f5ea6b7389f6f046d13d4896a8f9c1ba71e"
-uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
-version = "1.14.0"
-weakdeps = ["Adapt"]
-
-    [deps.OffsetArrays.extensions]
-    OffsetArraysAdaptExt = "Adapt"
 
 [[deps.Ogg_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1235,12 +997,6 @@ git-tree-sha1 = "949347156c25054de2db3b166c52ac4728cbad65"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
 version = "0.11.31"
 
-[[deps.Parameters]]
-deps = ["OrderedCollections", "UnPack"]
-git-tree-sha1 = "34c0e9ad262e5f7fc75b10a9952ca7692cfc5fbe"
-uuid = "d96e819e-fc66-5662-9728-84c9c7592b0a"
-version = "0.12.3"
-
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
 git-tree-sha1 = "8489905bcdbcfac64d1daa51ca07c0d8f0283821"
@@ -1275,11 +1031,11 @@ git-tree-sha1 = "7b1a9df27f072ac4c9c7cbe5efb198489258d1f5"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 version = "1.4.1"
 
-[[deps.PlotlyBase]]
-deps = ["ColorSchemes", "Dates", "DelimitedFiles", "DocStringExtensions", "JSON", "LaTeXStrings", "Logging", "Parameters", "Pkg", "REPL", "Requires", "Statistics", "UUIDs"]
-git-tree-sha1 = "56baf69781fc5e61607c3e46227ab17f7040ffa2"
-uuid = "a03496cd-edff-5a9b-9e67-9cda94a718b5"
-version = "0.8.19"
+[[deps.PlotlyLight]]
+deps = ["Artifacts", "Cobweb", "Downloads", "EasyConfig", "JSON3", "REPL", "Random", "StructTypes"]
+git-tree-sha1 = "5684d34d28ca87ef546a6cb9646d53c13f93a8ea"
+uuid = "ca7969ec-10b3-423e-8d99-40f33abb42bf"
+version = "0.9.1"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "JLFzf", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "PrecompileTools", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "RelocatableFolders", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "UnitfulLatexify", "Unzip"]
@@ -1352,6 +1108,12 @@ git-tree-sha1 = "9b23c31e76e333e6fb4c1595ae6afa74966a729e"
 uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
 version = "2.9.4"
 
+[[deps.RCall]]
+deps = ["CategoricalArrays", "Conda", "DataFrames", "DataStructures", "Dates", "Libdl", "Missings", "Preferences", "REPL", "Random", "Requires", "StatsModels", "WinReg"]
+git-tree-sha1 = "846b2aab2d312fda5e7b099fc217c661e8fae27e"
+uuid = "6f49c342-dc21-5d91-9882-a32aef131414"
+version = "0.14.1"
+
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
 uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
@@ -1359,16 +1121,6 @@ uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 [[deps.Random]]
 deps = ["SHA"]
 uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-
-[[deps.Ratios]]
-deps = ["Requires"]
-git-tree-sha1 = "1342a47bf3260ee108163042310d26f2be5ec90b"
-uuid = "c84ed2f1-dad5-54f0-aa8e-dbefe2724439"
-version = "0.4.5"
-weakdeps = ["FixedPointNumbers"]
-
-    [deps.Ratios.extensions]
-    RatiosFixedPointNumbersExt = "FixedPointNumbers"
 
 [[deps.RecipesBase]]
 deps = ["PrecompileTools"]
@@ -1430,9 +1182,10 @@ version = "1.4.3"
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 
-[[deps.SharedArrays]]
-deps = ["Distributed", "Mmap", "Random", "Serialization"]
-uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
+[[deps.ShiftedArrays]]
+git-tree-sha1 = "503688b59397b3307443af35cd953a13e8005c16"
+uuid = "1277b4bf-5013-50f5-be3d-901d8477a67a"
+version = "2.0.0"
 
 [[deps.Showoff]]
 deps = ["Dates", "Grisu"]
@@ -1464,26 +1217,12 @@ deps = ["IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_j
 git-tree-sha1 = "2f5d4697f21388cbe1ff299430dd169ef97d7e14"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
 version = "2.4.0"
-weakdeps = ["ChainRulesCore"]
 
     [deps.SpecialFunctions.extensions]
     SpecialFunctionsChainRulesCoreExt = "ChainRulesCore"
 
-[[deps.StaticArrays]]
-deps = ["LinearAlgebra", "PrecompileTools", "Random", "StaticArraysCore"]
-git-tree-sha1 = "9ae599cd7529cfce7fea36cf00a62cfc56f0f37c"
-uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.9.4"
-weakdeps = ["ChainRulesCore", "Statistics"]
-
-    [deps.StaticArrays.extensions]
-    StaticArraysChainRulesCoreExt = "ChainRulesCore"
-    StaticArraysStatisticsExt = "Statistics"
-
-[[deps.StaticArraysCore]]
-git-tree-sha1 = "36b3d696ce6366023a0ea192b4cd442268995a0d"
-uuid = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
-version = "1.4.2"
+    [deps.SpecialFunctions.weakdeps]
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -1516,17 +1255,23 @@ version = "1.3.1"
     ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
     InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
 
-[[deps.StatsPlots]]
-deps = ["AbstractFFTs", "Clustering", "DataStructures", "Distributions", "Interpolations", "KernelDensity", "LinearAlgebra", "MultivariateStats", "NaNMath", "Observables", "Plots", "RecipesBase", "RecipesPipeline", "Reexport", "StatsBase", "TableOperations", "Tables", "Widgets"]
-git-tree-sha1 = "3b1dcbf62e469a67f6733ae493401e53d92ff543"
-uuid = "f3b207a7-027a-5e70-b257-86293d7955fd"
-version = "0.15.7"
+[[deps.StatsModels]]
+deps = ["DataAPI", "DataStructures", "LinearAlgebra", "Printf", "REPL", "ShiftedArrays", "SparseArrays", "StatsAPI", "StatsBase", "StatsFuns", "Tables"]
+git-tree-sha1 = "5cf6c4583533ee38639f73b880f35fc85f2941e0"
+uuid = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
+version = "0.7.3"
 
 [[deps.StringManipulation]]
 deps = ["PrecompileTools"]
 git-tree-sha1 = "a04cabe79c5f01f4d723cc6704070ada0b9d46d5"
 uuid = "892a3eda-7b42-436c-8928-eab12a02cf0e"
 version = "0.3.4"
+
+[[deps.StructTypes]]
+deps = ["Dates", "UUIDs"]
+git-tree-sha1 = "ca4bccb03acf9faaf4137a9abc1881ed1841aa70"
+uuid = "856f2bd8-1eba-4b0a-8007-ebc267875bd4"
+version = "1.10.0"
 
 [[deps.SuiteSparse]]
 deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
@@ -1541,12 +1286,6 @@ version = "7.2.1+1"
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 version = "1.0.3"
-
-[[deps.TableOperations]]
-deps = ["SentinelArrays", "Tables", "Test"]
-git-tree-sha1 = "e383c87cf2a1dc41fa30c093b2a19877c83e1bc1"
-uuid = "ab02a1b2-a7df-11e8-156e-fb1833f50b87"
-version = "1.2.0"
 
 [[deps.TableTraits]]
 deps = ["IteratorInterfaceExtensions"]
@@ -1598,11 +1337,6 @@ version = "1.5.1"
 deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
-[[deps.UnPack]]
-git-tree-sha1 = "387c1f73762231e86e0c9c5443ce3b4a0a9a0c2b"
-uuid = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
-version = "1.0.2"
-
 [[deps.Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 
@@ -1637,6 +1371,11 @@ git-tree-sha1 = "ca0969166a028236229f63514992fc073799bb78"
 uuid = "41fe7b60-77ed-43a1-b4f0-825fd5a5650d"
 version = "0.2.0"
 
+[[deps.VersionParsing]]
+git-tree-sha1 = "58d6e80b4ee071f5efd07fda82cb9fbe17200868"
+uuid = "81def892-9a0e-5fdd-b105-ffc91e053289"
+version = "1.3.0"
+
 [[deps.Vulkan_Loader_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Wayland_jll", "Xorg_libX11_jll", "Xorg_libXrandr_jll", "xkbcommon_jll"]
 git-tree-sha1 = "2f0486047a07670caad3a81a075d2e518acc5c59"
@@ -1655,17 +1394,21 @@ git-tree-sha1 = "93f43ab61b16ddfb2fd3bb13b3ce241cafb0e6c9"
 uuid = "2381bf8a-dfd0-557d-9999-79630e7b1b91"
 version = "1.31.0+0"
 
-[[deps.Widgets]]
-deps = ["Colors", "Dates", "Observables", "OrderedCollections"]
-git-tree-sha1 = "fcdae142c1cfc7d89de2d11e08721d0f2f86c98a"
-uuid = "cc8bc4a8-27d6-5769-a93b-9d913e69aa62"
-version = "0.6.6"
+[[deps.WeakRefStrings]]
+deps = ["DataAPI", "InlineStrings", "Parsers"]
+git-tree-sha1 = "b1be2855ed9ed8eac54e5caff2afcdb442d52c23"
+uuid = "ea10d353-3f73-51f8-a26c-33c1cb351aa5"
+version = "1.4.2"
 
-[[deps.WoodburyMatrices]]
-deps = ["LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "c1a7aa6219628fcd757dede0ca95e245c5cd9511"
-uuid = "efce3f68-66dc-5838-9240-27a6d6f5f9b6"
+[[deps.WinReg]]
+git-tree-sha1 = "cd910906b099402bcc50b3eafa9634244e5ec83b"
+uuid = "1b915085-20d7-51cf-bf83-8f477d6f5128"
 version = "1.0.0"
+
+[[deps.WorkerUtilities]]
+git-tree-sha1 = "cd1659ba0d57b71a464a29e64dbc67cfe83d54e7"
+uuid = "76eceee3-57b5-4d4a-8e66-0e911cebbf60"
+version = "1.6.1"
 
 [[deps.XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Zlib_jll"]
@@ -1916,12 +1659,6 @@ deps = ["Artifacts", "Libdl"]
 uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
 version = "1.52.0+1"
 
-[[deps.oneTBB_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "7d0ea0f4895ef2f5cb83645fa689e52cb55cf493"
-uuid = "1317d2d5-d96f-522e-a858-c73665f53c3e"
-version = "2021.12.0+0"
-
 [[deps.p7zip_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
@@ -1947,68 +1684,38 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
-# ╟─522fac84-0895-11ef-394b-41c5fcdb71ea
-# ╟─2955a447-6308-4230-a495-19253eead7b6
-# ╟─f32e1efd-1284-408f-9bbf-60c53a6ad92a
-# ╟─981587d0-4284-46e6-a97b-1dc801ef2c41
-# ╟─c7dc808e-18ca-4d19-b982-658716ab9317
-# ╠═02088989-68c4-481b-b9df-59863e27637c
-# ╟─68c0ffa5-850e-4aba-b3b9-a72856ddb477
-# ╠═06ca47ca-382e-42ce-b1fb-9b3017ffe4a0
-# ╟─ed6284d8-ade5-45fa-85a2-75786a92be61
-# ╠═36039832-ed3a-46d1-bebf-125fc77252df
-# ╟─0ec66192-5700-4b88-b6bf-63969eee9970
-# ╟─4c30e8ba-2aac-4d56-9d8a-dfce73f6fc0e
-# ╟─0c98363f-3aba-47f0-b017-d1cdc6e222e2
-# ╟─5ea8d96a-3e12-429a-b2f6-f51311cc3da0
-# ╟─67e29bfe-cbee-4390-8841-b8fae458baf2
-# ╟─763ae914-46b9-4061-945e-80f331083273
-# ╟─e177b63d-a9b8-48eb-8114-3877d1379ab1
-# ╟─ec8ebc08-f03e-4886-8f77-bd65b70b94c0
-# ╟─b4bc520a-4ab9-486e-9825-0dfa1129b487
-# ╟─6b94f7c0-28d8-46f0-98f3-9c774244ba29
-# ╟─cdfeef39-2e07-4a6f-a6dd-687a8a084637
-# ╟─f6cf7433-6ddb-430b-9544-8e2476adf718
-# ╠═27decde3-18ee-46ba-b0e6-9d0ab2fc7abc
-# ╟─fad45705-0e18-432a-9d8f-598abe3bbeb2
-# ╟─3cc62e5c-548e-4601-827b-beaacbada118
-# ╟─a79a70b5-1486-444a-9660-17df271b83e9
-# ╟─3a20eb1c-5a85-4d08-bd6d-c71ccb7cc4ae
-# ╟─4f57dad5-ff3e-4c80-b2ed-6f24ee74eb23
-# ╟─9eda1a58-c7f7-42cf-821a-972c231294da
-# ╟─e40ab538-4be4-4ba7-baf2-a1e63865cdf3
-# ╟─4b06d302-a324-411a-a245-b15d22fab706
-# ╟─6e8b7445-c52b-4ff6-8459-503fe59d47f7
-# ╟─f989c223-4f4b-470b-9f22-b10338297235
-# ╟─cb19dbd5-4841-4747-b211-f253c5359223
-# ╟─c9d82ed5-6017-4bed-b327-09dc7a5c9905
-# ╟─81b37317-5089-4f6c-a494-af5210bbcb1c
-# ╟─455723ad-c29e-418b-b21e-31a51eb70f0b
-# ╟─1f509dcc-4396-436d-931a-bbe35e34185b
-# ╟─fa571e4b-7f44-4a35-9a56-7b28add60349
-# ╠═c862dcff-7bd2-440b-8973-13259c48e6ce
-# ╟─9add3a5f-cfb5-440e-a51a-16d3729c0bb0
-# ╠═5fdf808c-0481-4df4-afb7-eccfa935e9e9
-# ╠═a3ef43c8-e22c-4648-95fe-900fd69fe305
-# ╟─82cc14f2-bbe0-4aec-abbf-a349c9971768
-# ╟─b4dd25df-0918-4d36-b4e1-57a2b072b28a
-# ╠═6d36abc0-0df8-48d4-95b6-e771e80b5004
-# ╠═213244c3-1e6a-46cc-b766-954f178b2a79
-# ╟─b1d22775-9282-46d2-875e-47cf907b456a
-# ╠═ad04582d-5490-4ae8-a8e6-f6ef07cb7d02
-# ╟─c3ec4203-7783-426f-8d5e-b5227d66166c
-# ╠═b29f31cb-cb76-4f73-8b9a-4ec3bbac5031
-# ╠═74f763fa-bf91-43c1-b0ea-f09349a139be
-# ╟─ddbdb3b4-69c8-4bce-810d-f1791bb7a87a
-# ╟─9c11d820-4c4a-4d30-bbb7-11dda1d0b1ae
-# ╟─383c6327-c982-420f-8bc6-24869774c1b7
-# ╟─349b2b41-5900-41ed-ba39-78b6a2274c3e
-# ╟─736fe7c6-85e3-4e6b-9212-53d520863e31
-# ╠═563c5e67-ef8d-40cf-9dc1-52375a330645
-# ╟─49b1aa14-07d1-40e0-8278-4d4613cb2ce8
-# ╟─fc8ee68f-4157-48bd-b287-ad7f4fae1841
-# ╟─4d10503d-7e4f-4cf8-84a5-5dd2e98a58d8
-# ╟─877d5a4d-ef2b-4329-a810-7bc6e158cfb3
-# ╟─42a20eab-c3e0-41c2-86ff-59cc1c6ff168
+# ╟─f53dfc3e-21e3-11ef-1a3f-03b8bf2a1711
+# ╟─95acbdbd-6c19-486d-94e9-28953fe665d5
+# ╟─04d0ff60-f0f7-4b48-9a2b-242e76a0b2e7
+# ╟─9b069810-320e-45ee-9e46-507582d3eab9
+# ╟─b0a93250-af6c-4601-9451-3e3a28aeeab9
+# ╠═e7b2b269-2902-46f8-bc1e-af5384b4d1bc
+# ╠═32565401-ae72-4d56-bdb7-7558ea2b6b42
+# ╠═58f89858-a373-41a4-b71f-b7d87bb6302d
+# ╟─922a21aa-8596-4cb2-9fe0-aae9c548c7b6
+# ╟─53497114-d741-426f-bd3f-fe66491d6997
+# ╠═3da56149-50e1-44ce-8886-80cc8b67e427
+# ╟─41753b49-c314-40e9-951b-6bd9ed74add3
+# ╠═0c053542-8e6f-4135-992e-abac32be47c3
+# ╟─6d9891c2-b78c-4c17-b47c-1dd70c45df94
+# ╠═f15a7851-48bf-4f3c-8b6c-096a46b44ce2
+# ╠═cebbb799-229a-405c-a9f2-7dbcdd7a4079
+# ╟─97011870-35ca-42c9-8bac-5ff9c8786062
+# ╠═5a02371c-6401-4a11-aa2e-111679b5f5c2
+# ╠═c9da90d1-d32c-4c0c-809f-0d58f8ed1f3f
+# ╠═7ca3d333-f13a-4798-a334-2aa5275dc8c8
+# ╠═a4ccf8b0-88e7-4bfc-b226-6861de84e47b
+# ╠═d56ecaad-3b8d-494e-a55d-85f1c99c724f
+# ╠═ee0a53c1-1bfb-44c2-a4e0-ac45a03e340b
+# ╠═12cea0ec-035b-4033-93ac-3954d1bff798
+# ╟─47a4463e-1b93-44ba-956e-e0220c3db671
+# ╠═805cb0d3-3e89-4cd4-8a4a-3bdbc20515fe
+# ╟─176e3528-3d31-4df6-980c-cd670d673283
+# ╠═a488b2e6-2660-463e-8f89-c8017f56ca55
+# ╠═34614f4b-1743-405b-a91e-4518ab7eebea
+# ╠═1988d46a-b625-45c8-b581-3a5c0ff3d851
+# ╟─bab037bb-936a-400f-85b4-e0d6c515d8fe
+# ╟─d918c96c-28b6-421c-8e4e-9cdcdb4b510c
+# ╠═3d054039-e601-43cd-b04f-6548734a34be
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

@@ -554,6 +554,120 @@ md"""
 
 """
 
+# ╔═╡ f04dbab7-b08b-48c3-a0ea-559de323a800
+md"""
+## Usability
+
+!!! note "Quality of Life Features"
+	Julia has many "minor" features that help make it a joy to code in.
+"""
+
+# ╔═╡ 909ca104-01ee-42b8-ba2f-350e4cf6ebaa
+md"""
+### Tab Autocompletion
+
+!!! aside "What Autocompletes?"
+	In many cases, the tab key will autocomplete what you're typing (in coding environments like Pluto or the REPL):
+
+	- Property names (dot syntax).
+	- Dictionary keys.
+	- File/directory paths.
+	- Greek letters.
+"""
+
+# ╔═╡ 23644f93-7b0a-476b-988b-6d559c50b03e
+nt = (x=1, y=2, property_with_a_really_long_name=3)
+
+# ╔═╡ ef1aa424-bee9-4254-91b1-cf30b2d2615b
+# Type this below: nt.p <TAB>
+
+
+# ╔═╡ 8a13f30a-5d44-4565-bd16-3c030f7ac45e
+dict = Dict("one" => 1, "two" => 2)
+
+# ╔═╡ ec1af15a-ed47-4d59-b4f6-269cfe8216a4
+# Type this below: dict["t <TAB>
+
+
+# ╔═╡ 0f515f6d-4eae-44bd-9a09-693383e9efec
+# Type this below: \rho <TAB>
+
+
+# ╔═╡ c9a2da69-c872-4b0c-a1e1-4d6bf544195c
+# Type this below: \:smile: <TAB>
+
+
+# ╔═╡ 1da39bb0-241f-4498-aafd-3c8594e3cfae
+md"""
+### Anonymous Functions
+
+!!! aside "What's an Anonymous Function?"
+	Anonymous functions are one-off functions that are typically passed as an argument to some other function.  There are three ways to write them.
+
+	---
+
+	The `do` block syntax is only available when *the first argument* is a function.
+
+	---
+
+	The following three syntaxes are equivalent:
+"""
+
+# ╔═╡ d5d4d951-6bfa-484d-9a7f-8873c6c58ab5
+map(x -> x + 1, 1:5)
+
+# ╔═╡ 135103d3-ab4d-4d49-ae39-93a0e9a4c638
+map(function(x) x + 1 end, 1:5)
+
+# ╔═╡ e9771229-00ae-4dc1-a998-712c783dfe9d
+map(1:5) do x 
+	x + 1
+end
+
+# ╔═╡ c9d67cef-497e-4e01-b894-72ae5d6cc010
+md"""
+### Generators
+
+!!! aside "What are Generators?"
+	- Generators *generate* an iterator.
+	- Most functions that you typically think of being used with an array will accept arbitrary iterators, including generators.
+"""
+
+# ╔═╡ 0d17bf6a-b1f4-473d-8bcb-54068e1df757
+let 
+	g = (x for x in 1:10 if x > 8)
+
+	sum(g)  # == 9 + 10
+end
+
+# ╔═╡ a96a3d39-c79a-4215-ba15-8693da129cd7
+md"""
+### Array Comprehensions
+
+!!! aside "What are Array Comprehensions?"
+	- Array comprehensions are for programmatically creating the values of an array.
+	- Essentially take a generator and wrap an array around it.
+
+	---
+
+	Below are a few use cases for statisticians:
+"""
+
+# ╔═╡ 528f234f-415e-4d8e-87c4-1f012ff74dca
+ρ = 0.5
+
+# ╔═╡ 05e6f883-5899-43be-8b7d-3e9651ab9df0
+# Exponential Decay
+exp_decay = [exp(-ρ * t) for t in 1:10]
+
+# ╔═╡ e91237b1-adba-4e6c-b480-309a9a690ee8
+# Weights of Exponentially Weighted Mean
+ewma_weights = [ρ * (1 - ρ) ^ (t-1) for t in 1:10]
+
+# ╔═╡ a207e5bd-4710-40ee-b9e0-4d16fa3230ad
+# AR(1) correlation matrix
+ar1 = [ρ ^ abs(i - j) for i in 1:10, j in 1:10]
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -1112,7 +1226,7 @@ version = "17.4.0+2"
 """
 
 # ╔═╡ Cell order:
-# ╠═57c19f11-d09a-4d5f-8905-533e4192f6a5
+# ╟─57c19f11-d09a-4d5f-8905-533e4192f6a5
 # ╟─96eadd80-13a8-11ef-0d1e-4d6ff384ac8a
 # ╟─bb9083eb-be2f-4fef-aa3e-27b44045a107
 # ╟─ef4b6a7f-9925-4c1a-a969-645a5f3b4852
@@ -1162,5 +1276,24 @@ version = "17.4.0+2"
 # ╟─bdb16f98-57be-425e-99c8-6f02ccf14475
 # ╟─782eaf00-f0b0-4f9d-a77d-df38108d4952
 # ╟─fb4b17e9-0669-40d9-a53a-6538bb46b04e
+# ╟─f04dbab7-b08b-48c3-a0ea-559de323a800
+# ╠═909ca104-01ee-42b8-ba2f-350e4cf6ebaa
+# ╠═23644f93-7b0a-476b-988b-6d559c50b03e
+# ╠═ef1aa424-bee9-4254-91b1-cf30b2d2615b
+# ╠═8a13f30a-5d44-4565-bd16-3c030f7ac45e
+# ╠═ec1af15a-ed47-4d59-b4f6-269cfe8216a4
+# ╠═0f515f6d-4eae-44bd-9a09-693383e9efec
+# ╠═c9a2da69-c872-4b0c-a1e1-4d6bf544195c
+# ╟─1da39bb0-241f-4498-aafd-3c8594e3cfae
+# ╠═d5d4d951-6bfa-484d-9a7f-8873c6c58ab5
+# ╠═135103d3-ab4d-4d49-ae39-93a0e9a4c638
+# ╠═e9771229-00ae-4dc1-a998-712c783dfe9d
+# ╟─c9d67cef-497e-4e01-b894-72ae5d6cc010
+# ╠═0d17bf6a-b1f4-473d-8bcb-54068e1df757
+# ╟─a96a3d39-c79a-4215-ba15-8693da129cd7
+# ╠═528f234f-415e-4d8e-87c4-1f012ff74dca
+# ╠═05e6f883-5899-43be-8b7d-3e9651ab9df0
+# ╠═e91237b1-adba-4e6c-b480-309a9a690ee8
+# ╠═a207e5bd-4710-40ee-b9e0-4d16fa3230ad
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

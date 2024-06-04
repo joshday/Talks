@@ -163,9 +163,10 @@ Pluto is a *reactive* notebook environment that offers:
 - **Reproducibility** (built-in package manager).
   - As a course instructor, I have no fear that everyone can get up and running quickly.
 - **No hidden state** (No need to click "restart and run all").
+- **Live Documentation** (view docstrings for different functions as you type).
 
 !!! info "Cell Output"
-	One thing you'll quickly notice is that cell output is *above* the cell, rather than below as with Jupyter notebooks.
+	One thing you'll quickly notice is that cell output is *above* the cell, rather than below as with Jupyter notebooks.	
 """
 
 # ╔═╡ 7fb6df93-8c53-433c-895c-010e2ad23fef
@@ -228,9 +229,29 @@ md"""## No Hidden State
 # ╔═╡ 9bb0d697-2575-4840-ac5d-096eed487f34
 md"### Multiple Definitions of Same Variable"
 
+# ╔═╡ 5342fac8-464e-4724-950f-fff9f3156cc7
+var = 1
+
+# ╔═╡ 190356c3-ea1a-4da6-b878-3dd284ef9c3b
+# ╠═╡ disabled = true
+#=╠═╡
+var = 2
+  ╠═╡ =#
+
+# ╔═╡ 4ca2d008-644b-48d9-a3ff-b518babb590f
+md"""
+## Live Documentation
+
+- Type `?` inside a cell or click the "Live Docs" button in the bottom right to open the documentation pane.  It will automatically change depending on what you type.
+"""
+
+# ╔═╡ df8e1418-2f23-4c3d-bcc0-ef1b03a58c7d
+# Try typing `sum(abs.(1:10))` and watch how the docs pane changes
+
+
 # ╔═╡ 460ffb7d-8fe1-40d6-814e-a468890b7722
 md"""
-## A More Advanced Example
+## Advanced Interactivity Example
 
 !!! note ""
 	Pluto is super hackable with a little bit of HTML/Javascript knowledge.
@@ -405,20 +426,6 @@ Note that in 2023, 78% of Julia User & Developer Survey respondents said they us
 
 	There is a lot of functionality here.  See the link above or search for "Julia" in the command palette.
 """
-
-# ╔═╡ 0e870fd9-3b98-4e41-91d5-9a2f4f4c72b0
-md"# Next: Why Julia?"
-
-# ╔═╡ 190356c3-ea1a-4da6-b878-3dd284ef9c3b
-# ╠═╡ disabled = true
-#=╠═╡
-var = 2
-  ╠═╡ =#
-
-# ╔═╡ 5342fac8-464e-4724-950f-fff9f3156cc7
-#=╠═╡
-var = 1
-  ╠═╡ =#
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -784,6 +791,8 @@ version = "17.4.0+2"
 # ╟─9bb0d697-2575-4840-ac5d-096eed487f34
 # ╠═5342fac8-464e-4724-950f-fff9f3156cc7
 # ╠═190356c3-ea1a-4da6-b878-3dd284ef9c3b
+# ╟─4ca2d008-644b-48d9-a3ff-b518babb590f
+# ╠═df8e1418-2f23-4c3d-bcc0-ef1b03a58c7d
 # ╟─460ffb7d-8fe1-40d6-814e-a468890b7722
 # ╟─d9e2aa24-af11-4d5a-8fc5-0b128cf69e74
 # ╟─8d4fb0c6-fbaa-4cbc-86fd-86cb322bbe10
@@ -797,6 +806,5 @@ version = "17.4.0+2"
 # ╟─482a2ebb-1ef3-4b01-8ffc-44d974f91eae
 # ╟─afd6eaeb-ca9d-45a6-8578-18e676ddcfb8
 # ╟─28871cd5-21be-4c5b-83fc-a6f11cf5e215
-# ╟─0e870fd9-3b98-4e41-91d5-9a2f4f4c72b0
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

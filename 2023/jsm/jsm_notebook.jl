@@ -17,7 +17,7 @@ end
 # ╔═╡ daebeaf7-b7a5-4a29-afd5-19b57a0f37f7
 let
 	using AbstractTrees
-	
+
 	# In general, don't do this!
 	# Piracy is defining a method on a type when you "own" neither.
 	AbstractTrees.children(T::DataType) = subtypes(T)
@@ -29,7 +29,7 @@ using LinearAlgebra
 
 # ╔═╡ f611d61e-30a1-11ee-3119-99255be33a07
 begin
-	
+
 	using PlutoUI
 	using PlotlyLight
 	using Cobweb
@@ -42,14 +42,14 @@ begin
 	using StatsModels
 	using CSV
 	using GLM
-	
+
 	struct Foldable
 	    title::String
 	    content
 	end
 
 	vspace= h.div(style="height:20vh")
-	
+
 	function Base.show(io, mime::MIME"text/html", fld::Foldable)
 	    write(io,"<details><summary>$(fld.title)</summary><p>")
 	    show(io, mime, fld.content)
@@ -61,7 +61,7 @@ begin
 	    right
 		percent_left::Int
 	end
-	
+
 	function Base.show(io, mime::MIME"text/html", tc::TwoColumn)
 	    write(io, """<div style="display: flex;"><div style="flex: $(tc.percent_left)%;">""")
 	    show(io, mime, tc.left)
@@ -150,7 +150,7 @@ md"""
 !!! highlight "Julia Solves the \"Two-Culture Problem\""
 
 	![](https://user-images.githubusercontent.com/8075494/240981379-459fe8b7-7bc7-4652-ab79-889c32221225.png)
-	
+
 	![](https://user-images.githubusercontent.com/8075494/240981352-5824c33a-1a87-4213-8585-d53df2bfbb25.png)
 
 	- Images borrowed from [https://scientificcoder.com/my-target-audience](https://scientificcoder.com/my-target-audience)
@@ -168,7 +168,7 @@ md"""
 	#### The Sapir-Whorf Hypothesis
 	> The particular language one speaks influences the way one thinks about reality.
 	> - [https://www.sciencedirect.com/topics/psychology/sapir-whorf-hypothesis](https://www.sciencedirect.com/topics/psychology/sapir-whorf-hypothesis)
-	
+
 	###### The Programming Language version:
 	> Your language influences how you solve problems.
 
@@ -176,7 +176,7 @@ md"""
 	###### Combining ideas from claims 2 and 3:
 
 	> I'm going to use a hypothetical language called Blub...
-	> 
+	>
 	> As long as our hypothetical Blub programmer is looking down the power continuum, they know they're looking down. Languages less powerful than Blub are obviously less powerful, because they're missing features our programmer is used to. But **when our programmer looks up the power continuum, they don't realize they're looking up. What they see are merely weird languages.** They probably considers them about equivalent in power to Blub, but with all this other hairy stuff thrown in as well. Blub is good enough for them, because they think in Blub.
 	> - Paraphrased from Paul Graham's ["Beating the Averages" Essay](http://www.paulgraham.com/avg.html) (emphasis added)
 """
@@ -206,7 +206,7 @@ md"""
 ## Automatic Specialization
 
 !!! note "Julia uses a Just-in-time (JIT) compiler (LLVM)"
-	
+
 
 	- Start with a simple function:
 	```julia
@@ -229,11 +229,11 @@ md"""
 !!! note "A more complicated example"
 
 	Finding quantiles with Newton's Method for finding roots:
-	
+
 	$$\text{Solve for } x \text{:}\quad F_X(x) - q= 0$$
-	
+
 	- where $F_X$ is CDF of random variable $X$.
-	
+
 	$$x_{n+1} = x_n - \frac{F_X(x_n) - q}{F_X'(x_n)}$$
 
 """
@@ -257,8 +257,8 @@ $(@bind dist Select([Normal(), Gamma(5,1), Uniform(0,1), Beta(7,2), nothing]))
 # ╔═╡ 77230db4-dfaa-4559-a054-328931a0bb56
 let
 	rng = .01:.01:.99
-	if isnothing(dist) 
-		nothing 
+	if isnothing(dist)
+		nothing
 	else
 		p = Plot()(
 			y=rng, x=quantile.(dist, rng), name="quantile"
@@ -296,7 +296,7 @@ md"""
 	```
 
 	They are used for two things:
-	
+
 	1. **Validating user inputs.** E.g. You never need to do this:
 	```julia
 		function f(x)
@@ -308,15 +308,15 @@ md"""
 	- Function has a different meaning depending on the type:
 
 	```julia
-	half(x::Number) = x / 2 
+	half(x::Number) = x / 2
 
     half(x) = x[1:floor(Int, length(x) / 2)]
 	```
 """
 
 # ╔═╡ 4fb00db2-ea4b-4e21-a1ae-02fc21bcfc3c
-begin 
-	half(x::Number) = x / 2 
+begin
+	half(x::Number) = x / 2
 
     half(x) = x[1:floor(Int, length(x) / 2)]
 end
@@ -341,21 +341,21 @@ md"""
 # ╔═╡ 05398982-680e-4b8b-baa7-52e66e587798
 md"""
 !!! note "Note: Dispatch and Multiple Dispatch"
-    - **Dispatch** is the choice of which method to execute when a function is applied. 
+    - **Dispatch** is the choice of which method to execute when a function is applied.
 	- **Multiple Dispatch** is dispatch based on the types of *all* arguments to a function.
 """
 
 # ╔═╡ 79348898-63ae-4e8b-8ed9-d030ac6537b2
-let 
+let
 	# `Diagonal` doesn't store the off-diagonal elements
 	x = Diagonal(randn(1000))
 
 	# `Matrix` stores the off-diagonals (all are 0.0)
 	x2 = Matrix(x)
-	
+
 	y = randn(1000)
 
-	
+
 	t1 = @elapsed x * y
 	t2 = @elapsed x2 * y
 	@info "Dense matrix multiply is $(t2/ t1) times slower than Diagonal."
@@ -374,7 +374,7 @@ md"""
 
 	###### Design matrices in mixed effect models have lot of structure:
 	- Block diagonal
-	- Block sparse 
+	- Block sparse
 
 	###### MixedModels.jl doesn't need separate implementations for different structures in a design matrix.
 	- It just needs to rely on the methods (e.g. `*`, `+`) that are optimized for its `AbstractMatrix` types.
@@ -403,7 +403,7 @@ x = randn(100)
 abs(x)  # Error
 
 # "broadcast" `abs` to each element of `x`
-abs.(x)  
+abs.(x)
 ```
 !!! info "Chaining Broadcasts"
 	You can "chain" broadcasts to avoid temporary copies -> Big performance gains!
@@ -428,7 +428,7 @@ abs.(x)
 	# You can avoid temporary vectors:
 	sapply(1:100, function(x) abs(sin(sqrt(x + 10))))
 
-	# But...the path of least resistance is what's above 
+	# But...the path of least resistance is what's above
 	```
 """
 
@@ -499,7 +499,7 @@ md"""
 
 	> "lessons learned from Doug"
 
-	or 
+	or
 
 	> "code contributions from Doug"
 """
@@ -546,7 +546,7 @@ md"""
 	- In order to access an expression, we need macros:
 
 	```julia
-	using StatsModels 
+	using StatsModels
 
 	@formula y ~ 1 + x
 	```
@@ -560,9 +560,9 @@ md"""
 
 	```julia
 	url = "https://cdn.jsdelivr.net/gh/allisonhorst/palmerpenguins@433439c8b013eff3d36c847bb7a27fa0d7e353d8/inst/extdata/penguins.csv"
-	
+
 	penguins = CSV.read(read(download(url)), DataFrame, missingstring=["NA"])
-	
+
 	lm(@formula(bill_length_mm ~ 1 + island), penguins)
 	```
 """
@@ -590,7 +590,7 @@ md"""
 # ╔═╡ 6a62a82c-320c-4786-b846-b7056be8b9be
 md"""
 !!! note
-	- Plots from R don't automatically diplay in Pluto.
+	- Plots from R don't automatically display in Pluto.
 	- Good opportunity to write a macro:
 """
 
@@ -600,10 +600,10 @@ macro ggplot2(ex)
 	s = string(ex)
 	s2 = "ggsave(\"$nm\", height=4)"
 	esc(quote
-		let 
+		let
 			@R_str $s
 			@R_str $s2
-			LocalResource($nm) 
+			LocalResource($nm)
 		end
 	end)
 end
@@ -611,7 +611,7 @@ end
 # ╔═╡ ed3adc2e-28ca-489c-a5a3-ca425f92e28f
 begin
 	R"library(ggplot2)"  # Use the `R` string macro to load ggplot2
-	
+
 	@ggplot2 ggplot(mpg, aes(displ, hwy, colour = class)) + geom_point()
 end
 
@@ -637,11 +637,11 @@ md"""
 """
 
 # ╔═╡ 4a55e6ba-c7ca-4bc9-a37c-962012ea09a9
-let 
+let
 	R"data <- mpg"
-	
+
 	@rget data
-	
+
 	describe(data)
 end
 

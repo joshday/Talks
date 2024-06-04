@@ -14,12 +14,14 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 522fac84-0895-11ef-394b-41c5fcdb71ea
+# ╔═╡ 5e969372-0895-11ef-2b0c-4151966b7474
 begin
+	using CSV
+	using DataFrames
+	using Distributions
+	import PlotlyLight
 	using Cobweb
 	using PlutoUI
-	import GR
-	import PlotlyBase
 	img(src, style="") = h.img(; src, style="border-radius:8px;$style")
 	md"""
 	(notebook setup)
@@ -27,415 +29,357 @@ begin
 	$(HTML("<style>h1 { padding-top: 200px; }</style>"))
 	$(HTML("<style>h2 { padding-top: 100px; }</style>"))
 	$(HTML("<style>h3 { padding-top: 50px; }</style>"))
+	$(HTML("<style>h4 { padding-top: 50px; }</style>"))
 	"""
 end
 
-# ╔═╡ 36039832-ed3a-46d1-bebf-125fc77252df
-using Plots
+# ╔═╡ 68c493bd-850c-4bed-b1d0-9e6ef4fd1927
+using RCall
 
-# ╔═╡ 5fdf808c-0481-4df4-afb7-eccfa935e9e9
-using LaTeXStrings  # Enables writing LaTeX via L"\beta"
+# ╔═╡ 30f1d558-c7ae-40e3-b25d-b2be69ab7a66
+using StatsPlots
 
-# ╔═╡ 6d36abc0-0df8-48d4-95b6-e771e80b5004
-using DataFrames, StatsPlots
+# ╔═╡ 4480a003-4fb2-4591-baba-fdb86232dfb6
+using HypothesisTests
 
-# ╔═╡ b29f31cb-cb76-4f73-8b9a-4ec3bbac5031
-using Distributions
-
-# ╔═╡ f32e1efd-1284-408f-9bbf-60c53a6ad92a
-md"""
-!!! info "Which Package Should I Use?"
-	- Plots.jl is the most-used for a reason.  It's very powerful and interops with Julia packages so that often `plot(something)` "just works"™.
-	- If you are working headless (e.g. SSH-ing into a remote server), you might prefer UnicodePlots.jl to have plots display in your terminal.
-"""
-
-# ╔═╡ 981587d0-4284-46e6-a97b-1dc801ef2c41
-md"""
-!!! note "Honorable Mention: Makie"
-	[Makie](https://docs.makie.org/stable/) (pronounced "Mah-Kee") has a steeper learning curve than Plots, but it:
-	1. Is Julia all the way down.
-	2. Is optimized for large Plots.
-	3. Is more flexible than Plots (hence more complexity).
-"""
-
-# ╔═╡ c7dc808e-18ca-4d19-b982-658716ab9317
-md"""
-# Aside: `@details` Macro 
-
-- Browsers often don't do well with image-heavy pages.
-- To ease the burden on viewing this plot-heavy notebook in your browser, let's write a macro to hide plots when we're not viewing them.  
-
-We can use the `<details>` HTML tag to create "foldable" content.  We want the underlying HTML to look like:
-
-```html
-<details>
-	<summary><code>Expression</code></summary>
-	Result of Expression
-</details>
-```
-"""
-
-# ╔═╡ 02088989-68c4-481b-b9df-59863e27637c
-# Remember: macro input/output is an `Expr`
-macro details(ex)
-	# Remove unused parts of the Expr
-	ex = Base.remove_linenums!(ex) 
+# ╔═╡ 2576fd79-99df-4393-b7b1-f0a1df8762f2
+begin	
+	penguins_url = "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/penguins.csv"
 	
-	# HTML writer function
-	h = Cobweb.h  
+	penguins_file = download(penguins_url)
+	
+	df = dropmissing!(CSV.read(penguins_file, DataFrame))
 
-	# If code is multi-line use <pre>.  Otherwise use <code>.
-	code = ex.head in [:block, :let] ? h.pre(string(ex)) : h.code(string(ex))
-
-	# Return the Expr
-	esc(:(h.details(h.summary($code), $ex)))
+	md"""
+	!!! aside "Palmer Penguins Data"
+		Again we'll use the Palmer Penguins dataset (loaded in this Pluto cell) for demonstration.
+	"""
 end
 
-# ╔═╡ 68c0ffa5-850e-4aba-b3b9-a72856ddb477
+
+# ╔═╡ 9345ee30-cec3-443a-aae6-7ca1d26db7c1
+describe(df)
+
+# ╔═╡ 2178e8c6-c0d5-4c1f-95c7-8c42397aff85
 md"""
-!!! aside "Let's test it out"
-	Question: Why does this need to be a macro?  Why not a function?
+# Statistics
+
+!!! note "Opinionated Overview"
+	- Julia has much less built-in features for statistics/models compared to R.
+	- Unfortunately, development of statistical packages have stagnated in the last few years.
+	- In many, cases my recommendation will be to use R.  See below.
+	- Julia's performance advantages won't be apparent if the bottleneck of the fitting algorithm is [Basic Linear Algebra Subprograms (BLAS)](https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) (linear algebra).
+
+!!! aside "When to Use R"
+	- R already has a fast implementation that you know well.
+	- Julia doesn't have the thing you need.
+
+!!! aside "When to Use Julia"
+	- You are implementing an algorithm yourself.
+	- You have a small dependency stack.
+	- You're waiting for your R simulation to finish running.
 """
 
-# ╔═╡ 06ca47ca-382e-42ce-b1fb-9b3017ffe4a0
-@details 1 + 1
-
-# ╔═╡ ed6284d8-ade5-45fa-85a2-75786a92be61
-md"# Plots.jl"
-
-# ╔═╡ 0ec66192-5700-4b88-b6bf-63969eee9970
+# ╔═╡ 39e6db21-96ab-4f66-85ed-ce99b1dd75b0
 md"""
-## Basic Usage
+# Calling R from Julia
 
-!!! aside "The core function is `plot(data...; attributes...)`"
-	- `data`: What to plot.
-	- `attributes`: How to plot it.
+!!! note "RCall"
+	- The [RCall](https://juliainterop.github.io/RCall.jl/stable/) package was originally written by Doug Bates so that he could continue to use the `lattice` graphics package.
+
+	- Calling Julia from R is extremely easy.  If you have a problem where a part of the solution works best in Julia and another part in R, you're in luck.
+
+	- RCall even adds an R "REPL Mode" (by pressing `$`).
 """
 
-# ╔═╡ 4c30e8ba-2aac-4d56-9d8a-dfce73f6fc0e
-@details plot(randn(10))
-
-# ╔═╡ 0c98363f-3aba-47f0-b017-d1cdc6e222e2
-@details plot(randn(10), randn(10); seriestype = :scatter)
-
-# ╔═╡ 5ea8d96a-3e12-429a-b2f6-f51311cc3da0
-@details plot(randn(10), randn(10), randn(10); seriestype=:scatter)
-
-# ╔═╡ 67e29bfe-cbee-4390-8841-b8fae458baf2
-@details plot(sin, 0, 2pi; label="sin(x)")
-
-# ╔═╡ 763ae914-46b9-4061-945e-80f331083273
+# ╔═╡ 1d8b5344-d1d0-48c6-8622-5b3485f91cb2
 md"""
-## Every Column is a *Series*
+### Running R in Julia
 
-A Series is a set of related observations.
+!!! aside "There are multiple ways to \"run R\" from Julia"
+
+	- R REPL mode.
+	- `@rput` and `@rget`.
+	- `R"..."` string macro.
+	- RCall API: `reval`, `rcall`, `rcopy`, `robject`, etc.
+	- `@rlibrary` and `@rimport` macros.
 """
 
-# ╔═╡ e177b63d-a9b8-48eb-8114-3877d1379ab1
+# ╔═╡ ebee54d6-3426-4d16-8f9f-4e092b4d276e
 md"""
-!!! aside "Matrix Data"
-	E.g. a 10×3 Matrix produces 3 series with 10 observations each.
+### `@rput` and `@rget`
 """
 
-# ╔═╡ ec8ebc08-f03e-4886-8f77-bd65b70b94c0
-@details plot(rand(10, 3)) 
+# ╔═╡ bc4f7d8e-bfd9-4282-8e6e-c82ecc2bf94e
+n = 5
 
-# ╔═╡ b4bc520a-4ab9-486e-9825-0dfa1129b487
-md"""
-!!! aside "Passing Attributes *By Column*"
-	Keyword arguments can also be mapped to associated series by column.
-"""
+# ╔═╡ dff8956e-71de-4234-a5af-b1110ebf6c43
+# Julia to R
+@rput n
 
-# ╔═╡ 6b94f7c0-28d8-46f0-98f3-9c774244ba29
-@details plot(rand(10,3), label=["one" "two" "three"], seriestype=["scatter" "line"])
-
-# ╔═╡ cdfeef39-2e07-4a6f-a6dd-687a8a084637
-md"""
-## Each *Series Type* has a Corresponding Function
-
-E.g. `plot(x; seriestype=:scatter) == scatter(x)`
-"""
-
-# ╔═╡ f6cf7433-6ddb-430b-9544-8e2476adf718
-md"Choose Series Type: $(@bind seriestype Select([nothing, :scatter, :histogram2d]))"
-
-# ╔═╡ 27decde3-18ee-46ba-b0e6-9d0ab2fc7abc
-x = randn(100); y = randn(100);
-
-# ╔═╡ fad45705-0e18-432a-9d8f-598abe3bbeb2
-if isnothing(seriestype)
-	md"(no seriestype chosen above)"
-else
-	@info "$seriestype(x, y)"
-	getproperty(Plots, seriestype)(x, y)
-end
-
-# ╔═╡ 3cc62e5c-548e-4601-827b-beaacbada118
-md"## Plots can be Mutated"
-
-# ╔═╡ a79a70b5-1486-444a-9660-17df271b83e9
-@details p1 = plot(10:-1:1)
-
-# ╔═╡ 3a20eb1c-5a85-4d08-bd6d-c71ccb7cc4ae
-@details scatter!(p1, 1:10; seriestype=:scatter)
-
-# ╔═╡ 4f57dad5-ff3e-4c80-b2ed-6f24ee74eb23
-md"""
-!!! aside "Attributes have Mutating Functions Too"
-	E.g. `title!`, `label!`, etc.
-
-"""
-
-# ╔═╡ 9eda1a58-c7f7-42cf-821a-972c231294da
-@details title!(p1, "My Title")
-
-# ╔═╡ e40ab538-4be4-4ba7-baf2-a1e63865cdf3
-md"""
-## There are Multiple *Backends*
-
-Backends have a corresponding function, e.g.
-
-- `gr()` (static plots for publications, etc.)
-- `plotly()` (interactive Javascript plots for dashboards, etc.)
-
-!!! aside "Demo"
-	We'll demonstrate this in the REPL.  Typically these functions will only be called once at the beginning of a script.
-"""
-
-# ╔═╡ 4b06d302-a324-411a-a245-b15d22fab706
-md"""
-## Attributes have *Aliases*
-
-Plots comes with built-in shorthands for common attributes, e.g.
-
-- `ms` for `markersize`
-- `st` for `seriestype`
-- `lab` for `label`
-"""
-
-# ╔═╡ 6e8b7445-c52b-4ff6-8459-503fe59d47f7
-@details scatter(x, ms=10, lab="Label")
-
-# ╔═╡ f989c223-4f4b-470b-9f22-b10338297235
-md"""
-
-!!! aside "Magic Arguments"
-	Some attributes allow *magic arguments*, a Tuple of values that will map naturally to an attribute based on the type.
-
-	E.g. `m = (10, 0.5, "green")` maps `marker` attributes:
-	- `markersize = 10`
-	- `markeralpha = 0.5`
-	- `markercolor = "green"`
-"""
-
-# ╔═╡ cb19dbd5-4841-4747-b211-f253c5359223
-@details scatter(x, m=(10, .5, "green"))
-
-# ╔═╡ c9d82ed5-6017-4bed-b327-09dc7a5c9905
-md"""
-
-# Subplots/Layout
-
-- See [https://docs.juliaplots.org/latest/layouts/](https://docs.juliaplots.org/latest/layouts/) for more details.
-"""
-
-# ╔═╡ 81b37317-5089-4f6c-a494-af5210bbcb1c
-@details plot(rand(10,4), layout=4)
-
-# ╔═╡ 455723ad-c29e-418b-b21e-31a51eb70f0b
-@details plot(rand(10, 4), layout = (2, 1))
-
-# ╔═╡ 1f509dcc-4396-436d-931a-bbe35e34185b
-@details let 
-	p1 = plot(x)
-	p2 = plot(y)
-	plot(p1, p2)
-end
-
-# ╔═╡ fa571e4b-7f44-4a35-9a56-7b28add60349
-md"""
-!!! aside "Aside: Macros Within Macros"
-	Nested macros are not expanded.  E.g. in the expressions `@x @y expr`, `@x` is applied first and `@y` second.
-
-	In order to demonstrate Plots.jl's `@layout` macro, we'll remove `@details`.
-"""
-
-# ╔═╡ c862dcff-7bd2-440b-8973-13259c48e6ce
+# ╔═╡ 8ae61305-d726-455d-a558-bd1a9e2aaa48
+# R to Julia
 let 
-	p1 = bar(x)
-	p2 = scatter(y)
-	l = @layout [ a{0.7w} b{0.3w}]
-	plot(p1, p2, layout=l)
-end;  # Remove the `;` to display the plot
-
-# ╔═╡ 9add3a5f-cfb5-440e-a51a-16d3729c0bb0
-md"""
-# Recipes
-
-A plot *recipe* is a mechanism for extending Plots without the need to depend on the entire Plots.jl package (see [RecipesBase docs](https://docs.juliaplots.org/dev/RecipesBase/)).
-"""
-
-# ╔═╡ a3ef43c8-e22c-4648-95fe-900fd69fe305
-let
-	# Suppose we have a struct that represents fitted regression coefficients
-	struct LinRegModel
-		β::Vector{Float64}
-	end
-
-	# Let's tell Plots.jl how this type should be plotted.
-	# Keyword arguments are set via `-->`
-	# Positional arguments are returned at the end of the function.
-	@recipe function f(lm::LinRegModel)
-		seriestype --> :bar
-		title --> "LinRegModel Coefficients"
-		legend --> false
-		color --> "black"
-		alpha --> 0.5
-		xlabel --> "Coefficient"
-		ylabel --> "Value"
-		[L"\beta_{%$i}" for i in 1:length(lm.β)], lm.β  # Return data (x and y)
-	end
-
-	# Test it out:
-	plot(LinRegModel(1:10))
-end;
-
-# ╔═╡ 82cc14f2-bbe0-4aec-abbf-a349c9971768
-md"""
-!!! aside "Why Write a Recipe vs. a Function?"
-	A recipe will automatically work with the rest of the machinery in Plots, such as exposing all of the Plots attributes.  E.g. `plot(my_type; linecolor="red")` will "just work".
-"""
-
-# ╔═╡ b4dd25df-0918-4d36-b4e1-57a2b072b28a
-md"""
-## StatsPlots
-
-The **StatsPlots** package provides a large collection of plot recipes for all things statistics.
-"""
-
-# ╔═╡ 213244c3-1e6a-46cc-b766-954f178b2a79
-df = DataFrame(x=randn(100), y=randn(100));
-
-# ╔═╡ b1d22775-9282-46d2-875e-47cf907b456a
-md"""
-### The `@df` macro
-"""
-
-# ╔═╡ ad04582d-5490-4ae8-a8e6-f6ef07cb7d02
-# The @df macro lets you refer to column names directly
-@df df scatter(x, y);
-
-# ╔═╡ c3ec4203-7783-426f-8d5e-b5227d66166c
-md"""
-### Type Recipes
-"""
-
-# ╔═╡ 74f763fa-bf91-43c1-b0ea-f09349a139be
-plot(Normal())
-
-# ╔═╡ ddbdb3b4-69c8-4bce-810d-f1791bb7a87a
-md"""
-### New Plot Functions
-"""
-
-# ╔═╡ 9c11d820-4c4a-4d30-bbb7-11dda1d0b1ae
-@details violin(randn(100, 3), linewidth=0, alpha=.5)
-
-# ╔═╡ 383c6327-c982-420f-8bc6-24869774c1b7
-@details boxplot(randn(100, 3))
-
-# ╔═╡ 349b2b41-5900-41ed-ba39-78b6a2274c3e
-@details qqplot(randn(1000), randn(1000))
-
-# ╔═╡ 736fe7c6-85e3-4e6b-9212-53d520863e31
-md"""
-# Animations
-
-Plots has some great utilities for generating gifs.
-"""
-
-# ╔═╡ 563c5e67-ef8d-40cf-9dc1-52375a330645
-let
-	data = [0.0]
-	@gif for i in 1:100
-		push!(data, data[end] + randn() / i)
-		plot(data, lab=nothing)
-	end
+	@rget n
 end
 
-# ╔═╡ 49b1aa14-07d1-40e0-8278-4d4613cb2ce8
-md"""
-# Themes
+# ╔═╡ 743b5be6-8a97-446c-b7e4-1dfedafedf6b
+md"""### The `R"..."` String Macro"""
 
-The plot theme can be set e.g. `theme(:ggplot2)`.
+# ╔═╡ 33d8f2c2-327a-4b56-a89c-8d8c0acaca6a
+# Data that lives in R
+R"n"
+
+# ╔═╡ 24d71671-b2c4-4e4b-a61c-02aa3018a00f
+# Need to `rcopy` it for data to live in Julia
+rcopy(R"n")
+
+# ╔═╡ 7e572c12-f070-47a4-b038-d9f2b1fa60fc
+md"""
+### Interpolation and Type Conversions
+
+!!! aside "Interpolation Syntax"
+	You can also use Julia's interpolation syntax (`$`) to send data to R.
 """
 
-# ╔═╡ fc8ee68f-4157-48bd-b287-ad7f4fae1841
-md"Choose Theme: $(@bind plot_theme Select([:default, :dark, :ggplot2, :juno, :lime, :sand, :solarized, :solarized_light, :wong, :wong2, :gruvbox_dark, :gruvbox_light, :bright, :vibrant, :mute, :dao, :dracula]))"
+# ╔═╡ 3629604b-2524-4329-be71-30f333cd7eb9
+let 
+	n = 3
 
-# ╔═╡ 4d10503d-7e4f-4cf8-84a5-5dd2e98a58d8
+	R"rnorm($n)"
+end
+
+# ╔═╡ 1b4374f5-b45b-40ce-b912-954af50b41d5
+md"""
+!!! aside "Type Conversions"
+	Many complex types have built-in type conversions as well (like `DataFrame`s).
+"""
+
+# ╔═╡ 2dd6b00d-e372-4272-a007-b560c3e17260
+# Julia DataFrame --> R data.frame
+R"head($df)"
+
+# ╔═╡ 31a64930-f583-4b14-a73b-cca1eab7902b
 begin
-	@info plot_theme
-	Plots.showtheme(plot_theme)
+	# The R string macro works multiline as well
+	mpg_r = R"""
+	library(ggplot2)
+	
+	mpg
+	"""
+
+	# R tibble --> Julia DataFrame
+	mpg = rcopy(mpg_r)
 end
 
-# ╔═╡ 877d5a4d-ef2b-4329-a810-7bc6e158cfb3
-md"# Notebook Utility Functions"
+# ╔═╡ 0e1e531d-3d93-4718-887f-ab0ca56fd5fe
 
-# ╔═╡ 42a20eab-c3e0-41c2-86ff-59cc1c6ff168
-downloads_badge(pkg) = Markdown.parse("""
-[![Downloads](https://img.shields.io/badge/dynamic/json?url=http%3A%2F%2Fjuliapkgstats.com%2Fapi%2Fv1%2Fmonthly_downloads%2F$pkg&query=total_requests&suffix=%2Fmonth&label=Downloads)](https://juliapkgstats.com/pkg/$pkg)
-""")
 
-# ╔═╡ 2955a447-6308-4230-a495-19253eead7b6
+# ╔═╡ 0492d068-d54f-4159-9ca8-173c99c29ab9
 md"""
-# Plotting Packages
-
-
-!!! aside "What to Choose?"
-	There is no built-in plotting functionality in Julia.  
-
-	There are many to choose from.  
-
-	Here is a [very good Discourse post](https://discourse.julialang.org/t/comparison-of-plotting-packages/99860/2) that compare various packages. 
-
-## Download Stats
-
-Package | Downloads
---------|----------
-Plots | $(downloads_badge("Plots"))
-PlotlyJS | $(downloads_badge("PlotlyJS"))
-Makie | $(downloads_badge("Makie"))
-PyPlot | $(downloads_badge("PyPlot"))
-UnicodePlots | $(downloads_badge("UnicodePlots"))
-Gadfly | $(downloads_badge("Gadfly"))
-Vega | $(downloads_badge("Vega"))
-VegaLite | $(downloads_badge("VegaLite"))
-PlotlyLight | $(downloads_badge("PlotlyLight"))
+### R Plots
 """
+
+# ╔═╡ 7c4821e1-029a-4038-b767-d87bf0c91703
+md"""
+!!! note "R Plots in Pluto"
+	- Plots from R don't automatically display in Pluto.
+	- Good opportunity to write a macro!  The macro will
+	  1. Run the ggplot2 expression.
+	  2. Save the plot to disk.
+	  3. Load/display the plot as a `Pluto.LocalResource`
+"""
+
+# ╔═╡ 1cf90826-24b2-4b72-9b4b-f11e66108340
+macro ggplot2(ex)
+	file = tempname() * ".png"  # Create filename
+	s = string(ex)  # Create the contents of R"..."
+	s2 = "ggsave(\"$file\", height=4)"  # Save the plot to the file
+	esc(quote
+		let 
+			@R_str $s
+			@R_str $s2
+			LocalResource($file)  # Display as Pluto.LocalResource(file)
+		end
+	end)
+end
+
+# ╔═╡ 5754802e-fe5e-42bc-b7b3-fff51f0ec116
+@ggplot2 ggplot(mpg, aes(displ, hwy, colour = class)) + geom_point()
+
+# ╔═╡ b44be252-371a-400f-b02a-a7caad856376
+md"""
+!!! aside "It even works with interpolation!"
+"""
+
+# ╔═╡ 9f432ff2-9a0e-4b1e-b036-18ec4da89d9e
+let 
+	x = randn(1000)
+	
+	@ggplot2 ggplot(mapping=aes($x)) + geom_histogram(bins=45)
+end
+
+# ╔═╡ a62a4e71-cc62-4df5-bf85-ec76676a6b48
+md"""
+# Back to Julia...
+"""
+
+# ╔═╡ 20dcc0db-10fa-44a4-8841-ce4f030d6cae
+md"""
+# Distributions.jl
+
+!!! note "Distributions"
+	As a central component of the Julia statistics ecosystem, Distributions.jl is one of the better maintained/documented packages.
+"""
+
+# ╔═╡ e23a9860-a622-45ba-8015-fcffbb9cb3f5
+md"""
+### Each Distribution is a Type
+
+!!! note "Interface"
+	A consistent interface can be used with each distribution type, e.g. `pdf`, `cdf`, etc.
+"""
+
+# ╔═╡ 202aa704-25bc-4cfc-91d8-c4bd8a55080a
+dist = Normal()
+
+# ╔═╡ ef3f5f96-5349-4638-9526-fd2d76790be9
+pdf(dist, 0)
+
+# ╔═╡ ca642413-4988-4d82-95ba-603f3781f932
+cdf(dist, 0)
+
+# ╔═╡ ab6ea1bd-8b59-47b6-a257-732f8c1052a6
+mean(dist)
+
+# ╔═╡ 93df1e25-e2f1-463a-b9c7-e5ae068d4349
+std(dist)
+
+# ╔═╡ 855162f4-2dbd-433c-8353-c6651f3e0053
+quantile(dist, .975)
+
+# ╔═╡ fe9636bc-7f0f-44b6-b735-a113868ee8a5
+logpdf(dist, 0)
+
+# ╔═╡ 4f85f23b-3ddf-4a53-a91a-37fa047f49bd
+rand(dist)
+
+# ╔═╡ 42f647c1-964e-4314-998b-f63128f81b5d
+md"""
+### Fitting Distributions
+
+- `fit(dist_type, data)`
+"""
+
+# ╔═╡ 27ebde57-076d-47c6-9ec6-6caa7f88f896
+fitted_dist = fit(Normal, randn(100) .+ 1)
+
+# ╔═╡ 927898df-3099-4117-9f60-549241d18f45
+plot([dist, fitted_dist], fillto=0, alpha=.5, lab=["N(0,1)" "Fitted"])
+
+# ╔═╡ 5b978120-a9d1-4f5c-9681-d6ff6fc0ac5a
+md"""
+### Truncated Distributions
+
+- You can create truncated distributions that follow the same (`pdf`, `cdf`, etc.) interface.
+- `truncated(dist, lower, upper)`
+"""
+
+# ╔═╡ 8bd45e41-9231-4040-9146-9692c54419a4
+md"Choose bounds: $(@bind rng_slider RangeSlider(-5:.1:5))"
+
+# ╔═╡ 7e1fb080-81dc-44b5-be9b-bcd3b87a2b29
+let
+	lower, upper = extrema(rng_slider)
+	dist = truncated(Normal(0,1), lower, upper)
+
+	@info "summary stats:" mean(dist) std(dist) extrema(dist)
+	plot(dist, ylim=(0,Inf), xlim=(-5,5), fillto=0, title="Truncated Normal",
+		lab=nothing)
+end
+
+# ╔═╡ 14761e01-0875-4d22-baa9-73aac0f05758
+md"""
+### Mixture Models
+- `MixtureModel(components, [prior])`
+"""
+
+# ╔═╡ 35945030-df64-4d44-ac6e-91cb38d34f3c
+let 
+	dist = MixtureModel([Normal(0,1), Gamma(2,4)], [.7, .3])
+
+	plot(x -> pdf(dist,x), -5, 40, linewidth=3, lab="Mixture")
+	plot!(dist, lab=["Component 1" "Component 2"], ls=:dash)
+end
+
+# ╔═╡ 71c0e0da-1d62-44be-8a64-4d30e7d7bb65
+md"""
+# Basic Hypothesis Testing
+
+!!! note "HypothesisTests"
+	The [HypothesisTests](https://juliastats.org/HypothesisTests.jl/stable/) package has a large collection of statistical tests, including parametric, nonparametric, time series, and multivariate tests.
+"""
+
+# ╔═╡ 993e440b-b4d3-4970-a852-3d1bceda1502
+md"""
+!!! note "T-test Example"
+	Here we'll run a simple t-test on some simulated data:
+
+	$H_0: \mu = 0$
+	$H_A: \mu \ne 0$
+"""
+
+# ╔═╡ d2b85c7b-a1cb-46f8-b48c-21c2594fd4f3
+ttest = OneSampleTTest(randn(10))
+
+# ╔═╡ 4da69748-493c-4b78-a23f-fa1602b1a4a9
+confint(ttest, level=.99)
+
+# ╔═╡ 69c4dbfb-2eb3-4382-bc05-0eae137fb5bc
+pvalue(ttest)
+
+# ╔═╡ 379920b9-4920-431f-95cf-7c8913c95c74
+md"""
+### Example Simulation
+- Let's verify the type-I error rate of the t-test above using a simulation.
+"""
+
+# ╔═╡ d4640b39-f6f8-41b9-aca4-cc89315e576f
+function simulate_ttest(nobs, nsims, σ = 1)
+	pvalues = Float64[]  # empty array of Float64s
+	for i in 1:nsims
+		x = σ .* randn(nobs)  # Generate data under H0
+		test = OneSampleTTest(x)
+		push!(pvalues, pvalue(test))
+	end
+	return mean(pvalues .< 0.05)
+end
+
+# ╔═╡ d3f06739-497f-45c7-a9e0-7245dba69441
+simulate_ttest(3, 10^6, .1)  # This should be ~0.5
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 Cobweb = "ec354790-cf28-43e8-bb59-b484409b7bad"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
-GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
-LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
-PlotlyBase = "a03496cd-edff-5a9b-9e67-9cda94a718b5"
-Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+HypothesisTests = "09f84164-cd44-5f33-b23f-e6b0d136a0d5"
+PlotlyLight = "ca7969ec-10b3-423e-8d99-40f33abb42bf"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+RCall = "6f49c342-dc21-5d91-9882-a32aef131414"
 StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 
 [compat]
+CSV = "~0.10.14"
 Cobweb = "~0.6.1"
 DataFrames = "~1.6.1"
 Distributions = "~0.25.109"
-GR = "~0.73.5"
-LaTeXStrings = "~1.3.1"
-PlotlyBase = "~0.8.19"
-Plots = "~1.40.4"
+HypothesisTests = "~0.11.0"
+PlotlyLight = "~0.9.1"
 PlutoUI = "~0.7.59"
+RCall = "~0.14.1"
 StatsPlots = "~0.15.7"
 """
 
@@ -445,7 +389,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.3"
 manifest_format = "2.0"
-project_hash = "2d9a595be0564825b4c094ad28bdf6872ddd7054"
+project_hash = "9b592281f80885d3265272bd39e86c7e3bbc5ba4"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -463,6 +407,27 @@ deps = ["Pkg"]
 git-tree-sha1 = "6e1d2a35f2f90a4bc7c2ed98079b2ba09c35b83a"
 uuid = "6e696c72-6542-2067-7265-42206c756150"
 version = "1.3.2"
+
+[[deps.Accessors]]
+deps = ["CompositionsBase", "ConstructionBase", "Dates", "InverseFunctions", "LinearAlgebra", "MacroTools", "Markdown", "Test"]
+git-tree-sha1 = "c0d491ef0b135fd7d63cbc6404286bc633329425"
+uuid = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
+version = "0.1.36"
+
+    [deps.Accessors.extensions]
+    AccessorsAxisKeysExt = "AxisKeys"
+    AccessorsIntervalSetsExt = "IntervalSets"
+    AccessorsStaticArraysExt = "StaticArrays"
+    AccessorsStructArraysExt = "StructArrays"
+    AccessorsUnitfulExt = "Unitful"
+
+    [deps.Accessors.weakdeps]
+    AxisKeys = "94b1ba4f-4ee9-5380-92f1-94cde586c3c5"
+    IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
+    Requires = "ae029012-a4dd-5104-9daa-d747884805df"
+    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+    StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
+    Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
@@ -519,6 +484,12 @@ git-tree-sha1 = "9e2a6b69137e6969bab0152632dcb3bc108c8bdd"
 uuid = "6e34b625-4abd-537c-b88f-471c36dfa7a0"
 version = "1.0.8+1"
 
+[[deps.CSV]]
+deps = ["CodecZlib", "Dates", "FilePathsBase", "InlineStrings", "Mmap", "Parsers", "PooledArrays", "PrecompileTools", "SentinelArrays", "Tables", "Unicode", "WeakRefStrings", "WorkerUtilities"]
+git-tree-sha1 = "6c834533dc1fabd820c1db03c839bf97e45a3fab"
+uuid = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+version = "0.10.14"
+
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
 git-tree-sha1 = "a2f1c8c668c8e3cb4cca4e57a8efdb09067bb3fd"
@@ -530,6 +501,19 @@ deps = ["LinearAlgebra"]
 git-tree-sha1 = "f641eb0a4f00c343bbc32346e1217b86f3ce9dad"
 uuid = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
 version = "0.5.1"
+
+[[deps.CategoricalArrays]]
+deps = ["DataAPI", "Future", "Missings", "Printf", "Requires", "Statistics", "Unicode"]
+git-tree-sha1 = "1568b28f91293458345dabba6a5ea3f183250a61"
+uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
+version = "0.10.8"
+weakdeps = ["JSON", "RecipesBase", "SentinelArrays", "StructTypes"]
+
+    [deps.CategoricalArrays.extensions]
+    CategoricalArraysJSONExt = "JSON"
+    CategoricalArraysRecipesBaseExt = "RecipesBase"
+    CategoricalArraysSentinelArraysExt = "SentinelArrays"
+    CategoricalArraysStructTypesExt = "StructTypes"
 
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra"]
@@ -587,6 +571,16 @@ git-tree-sha1 = "362a287c3aa50601b0bc359053d5c2468f0e7ce0"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.12.11"
 
+[[deps.Combinatorics]]
+git-tree-sha1 = "08c8b6831dc00bfea825826be0bc8336fc369860"
+uuid = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
+version = "1.0.2"
+
+[[deps.CommonSolve]]
+git-tree-sha1 = "0eee5eb66b1cf62cd6ad1b460238e60e4b09400c"
+uuid = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
+version = "0.2.4"
+
 [[deps.Compat]]
 deps = ["TOML", "UUIDs"]
 git-tree-sha1 = "b1c55339b7c6c350ee89f2c1604299660525b248"
@@ -602,11 +596,40 @@ deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
 version = "1.1.1+0"
 
+[[deps.CompositionsBase]]
+git-tree-sha1 = "802bb88cd69dfd1509f6670416bd4434015693ad"
+uuid = "a33af91c-f02d-484b-be07-31d278c5ca2b"
+version = "0.1.2"
+weakdeps = ["InverseFunctions"]
+
+    [deps.CompositionsBase.extensions]
+    CompositionsBaseInverseFunctionsExt = "InverseFunctions"
+
 [[deps.ConcurrentUtilities]]
 deps = ["Serialization", "Sockets"]
 git-tree-sha1 = "6cbbd4d241d7e6579ab354737f4dd95ca43946e1"
 uuid = "f0e56b4a-5159-44fe-b623-3e5288b988bb"
 version = "2.4.1"
+
+[[deps.Conda]]
+deps = ["Downloads", "JSON", "VersionParsing"]
+git-tree-sha1 = "51cab8e982c5b598eea9c8ceaced4b58d9dd37c9"
+uuid = "8f4d0f93-b110-5947-807f-2305c1781a2d"
+version = "1.10.0"
+
+[[deps.ConstructionBase]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "260fd2400ed2dab602a7c15cf10c1933c59930a2"
+uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
+version = "1.5.5"
+
+    [deps.ConstructionBase.extensions]
+    ConstructionBaseIntervalSetsExt = "IntervalSets"
+    ConstructionBaseStaticArraysExt = "StaticArrays"
+
+    [deps.ConstructionBase.weakdeps]
+    IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
+    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [[deps.Contour]]
 git-tree-sha1 = "439e35b0b36e2e5881738abc8857bd92ad6ff9a8"
@@ -704,6 +727,12 @@ git-tree-sha1 = "5837a837389fccf076445fce071c8ddaea35a566"
 uuid = "fa6b7ba4-c1ee-5f82-b5fc-ecf0adba8f74"
 version = "0.6.8"
 
+[[deps.EasyConfig]]
+deps = ["JSON3", "OrderedCollections", "StructTypes"]
+git-tree-sha1 = "11fa8ecd53631b01a2af60e16795f8b4731eb391"
+uuid = "acab07b0-f158-46d4-8913-50acef6d41fe"
+version = "0.1.16"
+
 [[deps.EpollShim_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "8e9441ee83492030ace98f9789a654a6d0b1f643"
@@ -745,6 +774,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "c6033cc3892d0ef5bb9cd29b7f2f0331ea5184ea"
 uuid = "f5851436-0d7a-5f13-b9de-f02708fd171a"
 version = "3.3.10+0"
+
+[[deps.FilePathsBase]]
+deps = ["Compat", "Dates", "Mmap", "Printf", "Test", "UUIDs"]
+git-tree-sha1 = "9f00e42f8d99fdde64d40c8ea5d14269a2e2c1aa"
+uuid = "48062228-2e41-5def-b9a4-89aafe57970f"
+version = "0.9.21"
 
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
@@ -865,6 +900,12 @@ git-tree-sha1 = "7134810b1afce04bbc1045ca1985fbe81ce17653"
 uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
 version = "0.9.5"
 
+[[deps.HypothesisTests]]
+deps = ["Combinatorics", "Distributions", "LinearAlgebra", "Printf", "Random", "Rmath", "Roots", "Statistics", "StatsAPI", "StatsBase"]
+git-tree-sha1 = "4b5d5ba51f5f473737ed9de6d8a7aa190ad8c72f"
+uuid = "09f84164-cd44-5f33-b23f-e6b0d136a0d5"
+version = "0.11.0"
+
 [[deps.IOCapture]]
 deps = ["Logging", "Random"]
 git-tree-sha1 = "8b72179abc660bfab5e28472e019392b97d0985c"
@@ -896,6 +937,16 @@ weakdeps = ["Unitful"]
 
     [deps.Interpolations.extensions]
     InterpolationsUnitfulExt = "Unitful"
+
+[[deps.InverseFunctions]]
+deps = ["Test"]
+git-tree-sha1 = "e7cbed5032c4c397a6ac23d1493f3289e01231c4"
+uuid = "3587e190-3f89-42d0-90ee-14403ec27112"
+version = "0.1.14"
+weakdeps = ["Dates"]
+
+    [deps.InverseFunctions.extensions]
+    DatesExt = "Dates"
 
 [[deps.InvertedIndices]]
 git-tree-sha1 = "0dc7b50b8d436461be01300fd8cd45aa0274b038"
@@ -929,6 +980,18 @@ deps = ["Dates", "Mmap", "Parsers", "Unicode"]
 git-tree-sha1 = "31e996f0a15c7b280ba9f76636b3ff9e2ae58c9a"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "0.21.4"
+
+[[deps.JSON3]]
+deps = ["Dates", "Mmap", "Parsers", "PrecompileTools", "StructTypes", "UUIDs"]
+git-tree-sha1 = "eb3edce0ed4fa32f75a0a11217433c31d56bd48b"
+uuid = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
+version = "1.14.0"
+
+    [deps.JSON3.extensions]
+    JSON3ArrowExt = ["ArrowTypes"]
+
+    [deps.JSON3.weakdeps]
+    ArrowTypes = "31f734f8-188a-4ce0-8406-c8a06bd891cd"
 
 [[deps.JpegTurbo_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -1235,12 +1298,6 @@ git-tree-sha1 = "949347156c25054de2db3b166c52ac4728cbad65"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
 version = "0.11.31"
 
-[[deps.Parameters]]
-deps = ["OrderedCollections", "UnPack"]
-git-tree-sha1 = "34c0e9ad262e5f7fc75b10a9952ca7692cfc5fbe"
-uuid = "d96e819e-fc66-5662-9728-84c9c7592b0a"
-version = "0.12.3"
-
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
 git-tree-sha1 = "8489905bcdbcfac64d1daa51ca07c0d8f0283821"
@@ -1275,11 +1332,11 @@ git-tree-sha1 = "7b1a9df27f072ac4c9c7cbe5efb198489258d1f5"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 version = "1.4.1"
 
-[[deps.PlotlyBase]]
-deps = ["ColorSchemes", "Dates", "DelimitedFiles", "DocStringExtensions", "JSON", "LaTeXStrings", "Logging", "Parameters", "Pkg", "REPL", "Requires", "Statistics", "UUIDs"]
-git-tree-sha1 = "56baf69781fc5e61607c3e46227ab17f7040ffa2"
-uuid = "a03496cd-edff-5a9b-9e67-9cda94a718b5"
-version = "0.8.19"
+[[deps.PlotlyLight]]
+deps = ["Artifacts", "Cobweb", "Downloads", "EasyConfig", "JSON3", "REPL", "Random", "StructTypes"]
+git-tree-sha1 = "5684d34d28ca87ef546a6cb9646d53c13f93a8ea"
+uuid = "ca7969ec-10b3-423e-8d99-40f33abb42bf"
+version = "0.9.1"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "JLFzf", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "PrecompileTools", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "RelocatableFolders", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "UnitfulLatexify", "Unzip"]
@@ -1352,6 +1409,12 @@ git-tree-sha1 = "9b23c31e76e333e6fb4c1595ae6afa74966a729e"
 uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
 version = "2.9.4"
 
+[[deps.RCall]]
+deps = ["CategoricalArrays", "Conda", "DataFrames", "DataStructures", "Dates", "Libdl", "Missings", "Preferences", "REPL", "Random", "Requires", "StatsModels", "WinReg"]
+git-tree-sha1 = "846b2aab2d312fda5e7b099fc217c661e8fae27e"
+uuid = "6f49c342-dc21-5d91-9882-a32aef131414"
+version = "0.14.1"
+
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
 uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
@@ -1411,6 +1474,24 @@ git-tree-sha1 = "d483cd324ce5cf5d61b77930f0bbd6cb61927d21"
 uuid = "f50d1b31-88e8-58de-be2c-1cc44531875f"
 version = "0.4.2+0"
 
+[[deps.Roots]]
+deps = ["Accessors", "ChainRulesCore", "CommonSolve", "Printf"]
+git-tree-sha1 = "1ab580704784260ee5f45bffac810b152922747b"
+uuid = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
+version = "2.1.5"
+
+    [deps.Roots.extensions]
+    RootsForwardDiffExt = "ForwardDiff"
+    RootsIntervalRootFindingExt = "IntervalRootFinding"
+    RootsSymPyExt = "SymPy"
+    RootsSymPyPythonCallExt = "SymPyPythonCall"
+
+    [deps.Roots.weakdeps]
+    ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+    IntervalRootFinding = "d2bf35a9-74e0-55ec-b149-d360ff49b807"
+    SymPy = "24249f21-da20-56a4-8eb1-6a02cf4ae2e6"
+    SymPyPythonCall = "bc8888f7-b21e-4b7c-a06a-5d9c9496438c"
+
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 version = "0.7.0"
@@ -1433,6 +1514,11 @@ uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 [[deps.SharedArrays]]
 deps = ["Distributed", "Mmap", "Random", "Serialization"]
 uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
+
+[[deps.ShiftedArrays]]
+git-tree-sha1 = "503688b59397b3307443af35cd953a13e8005c16"
+uuid = "1277b4bf-5013-50f5-be3d-901d8477a67a"
+version = "2.0.0"
 
 [[deps.Showoff]]
 deps = ["Dates", "Grisu"]
@@ -1507,14 +1593,17 @@ deps = ["HypergeometricFunctions", "IrrationalConstants", "LogExpFunctions", "Re
 git-tree-sha1 = "cef0472124fab0695b58ca35a77c6fb942fdab8a"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 version = "1.3.1"
+weakdeps = ["ChainRulesCore", "InverseFunctions"]
 
     [deps.StatsFuns.extensions]
     StatsFunsChainRulesCoreExt = "ChainRulesCore"
     StatsFunsInverseFunctionsExt = "InverseFunctions"
 
-    [deps.StatsFuns.weakdeps]
-    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-    InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
+[[deps.StatsModels]]
+deps = ["DataAPI", "DataStructures", "LinearAlgebra", "Printf", "REPL", "ShiftedArrays", "SparseArrays", "StatsAPI", "StatsBase", "StatsFuns", "Tables"]
+git-tree-sha1 = "5cf6c4583533ee38639f73b880f35fc85f2941e0"
+uuid = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
+version = "0.7.3"
 
 [[deps.StatsPlots]]
 deps = ["AbstractFFTs", "Clustering", "DataStructures", "Distributions", "Interpolations", "KernelDensity", "LinearAlgebra", "MultivariateStats", "NaNMath", "Observables", "Plots", "RecipesBase", "RecipesPipeline", "Reexport", "StatsBase", "TableOperations", "Tables", "Widgets"]
@@ -1527,6 +1616,12 @@ deps = ["PrecompileTools"]
 git-tree-sha1 = "a04cabe79c5f01f4d723cc6704070ada0b9d46d5"
 uuid = "892a3eda-7b42-436c-8928-eab12a02cf0e"
 version = "0.3.4"
+
+[[deps.StructTypes]]
+deps = ["Dates", "UUIDs"]
+git-tree-sha1 = "ca4bccb03acf9faaf4137a9abc1881ed1841aa70"
+uuid = "856f2bd8-1eba-4b0a-8007-ebc267875bd4"
+version = "1.10.0"
 
 [[deps.SuiteSparse]]
 deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
@@ -1598,11 +1693,6 @@ version = "1.5.1"
 deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
-[[deps.UnPack]]
-git-tree-sha1 = "387c1f73762231e86e0c9c5443ce3b4a0a9a0c2b"
-uuid = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
-version = "1.0.2"
-
 [[deps.Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 
@@ -1617,14 +1707,11 @@ deps = ["Dates", "LinearAlgebra", "Random"]
 git-tree-sha1 = "dd260903fdabea27d9b6021689b3cd5401a57748"
 uuid = "1986cc42-f94f-5a68-af5c-568840ba703d"
 version = "1.20.0"
+weakdeps = ["ConstructionBase", "InverseFunctions"]
 
     [deps.Unitful.extensions]
     ConstructionBaseUnitfulExt = "ConstructionBase"
     InverseFunctionsUnitfulExt = "InverseFunctions"
-
-    [deps.Unitful.weakdeps]
-    ConstructionBase = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
-    InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
 
 [[deps.UnitfulLatexify]]
 deps = ["LaTeXStrings", "Latexify", "Unitful"]
@@ -1636,6 +1723,11 @@ version = "1.6.3"
 git-tree-sha1 = "ca0969166a028236229f63514992fc073799bb78"
 uuid = "41fe7b60-77ed-43a1-b4f0-825fd5a5650d"
 version = "0.2.0"
+
+[[deps.VersionParsing]]
+git-tree-sha1 = "58d6e80b4ee071f5efd07fda82cb9fbe17200868"
+uuid = "81def892-9a0e-5fdd-b105-ffc91e053289"
+version = "1.3.0"
 
 [[deps.Vulkan_Loader_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Wayland_jll", "Xorg_libX11_jll", "Xorg_libXrandr_jll", "xkbcommon_jll"]
@@ -1655,17 +1747,33 @@ git-tree-sha1 = "93f43ab61b16ddfb2fd3bb13b3ce241cafb0e6c9"
 uuid = "2381bf8a-dfd0-557d-9999-79630e7b1b91"
 version = "1.31.0+0"
 
+[[deps.WeakRefStrings]]
+deps = ["DataAPI", "InlineStrings", "Parsers"]
+git-tree-sha1 = "b1be2855ed9ed8eac54e5caff2afcdb442d52c23"
+uuid = "ea10d353-3f73-51f8-a26c-33c1cb351aa5"
+version = "1.4.2"
+
 [[deps.Widgets]]
 deps = ["Colors", "Dates", "Observables", "OrderedCollections"]
 git-tree-sha1 = "fcdae142c1cfc7d89de2d11e08721d0f2f86c98a"
 uuid = "cc8bc4a8-27d6-5769-a93b-9d913e69aa62"
 version = "0.6.6"
 
+[[deps.WinReg]]
+git-tree-sha1 = "cd910906b099402bcc50b3eafa9634244e5ec83b"
+uuid = "1b915085-20d7-51cf-bf83-8f477d6f5128"
+version = "1.0.0"
+
 [[deps.WoodburyMatrices]]
 deps = ["LinearAlgebra", "SparseArrays"]
 git-tree-sha1 = "c1a7aa6219628fcd757dede0ca95e245c5cd9511"
 uuid = "efce3f68-66dc-5838-9240-27a6d6f5f9b6"
 version = "1.0.0"
+
+[[deps.WorkerUtilities]]
+git-tree-sha1 = "cd1659ba0d57b71a464a29e64dbc67cfe83d54e7"
+uuid = "76eceee3-57b5-4d4a-8e66-0e911cebbf60"
+version = "1.6.1"
 
 [[deps.XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Zlib_jll"]
@@ -1947,68 +2055,60 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
-# ╟─522fac84-0895-11ef-394b-41c5fcdb71ea
-# ╟─2955a447-6308-4230-a495-19253eead7b6
-# ╟─f32e1efd-1284-408f-9bbf-60c53a6ad92a
-# ╟─981587d0-4284-46e6-a97b-1dc801ef2c41
-# ╟─c7dc808e-18ca-4d19-b982-658716ab9317
-# ╠═02088989-68c4-481b-b9df-59863e27637c
-# ╟─68c0ffa5-850e-4aba-b3b9-a72856ddb477
-# ╠═06ca47ca-382e-42ce-b1fb-9b3017ffe4a0
-# ╟─ed6284d8-ade5-45fa-85a2-75786a92be61
-# ╠═36039832-ed3a-46d1-bebf-125fc77252df
-# ╟─0ec66192-5700-4b88-b6bf-63969eee9970
-# ╟─4c30e8ba-2aac-4d56-9d8a-dfce73f6fc0e
-# ╟─0c98363f-3aba-47f0-b017-d1cdc6e222e2
-# ╟─5ea8d96a-3e12-429a-b2f6-f51311cc3da0
-# ╟─67e29bfe-cbee-4390-8841-b8fae458baf2
-# ╟─763ae914-46b9-4061-945e-80f331083273
-# ╟─e177b63d-a9b8-48eb-8114-3877d1379ab1
-# ╟─ec8ebc08-f03e-4886-8f77-bd65b70b94c0
-# ╟─b4bc520a-4ab9-486e-9825-0dfa1129b487
-# ╟─6b94f7c0-28d8-46f0-98f3-9c774244ba29
-# ╟─cdfeef39-2e07-4a6f-a6dd-687a8a084637
-# ╟─f6cf7433-6ddb-430b-9544-8e2476adf718
-# ╠═27decde3-18ee-46ba-b0e6-9d0ab2fc7abc
-# ╟─fad45705-0e18-432a-9d8f-598abe3bbeb2
-# ╟─3cc62e5c-548e-4601-827b-beaacbada118
-# ╟─a79a70b5-1486-444a-9660-17df271b83e9
-# ╟─3a20eb1c-5a85-4d08-bd6d-c71ccb7cc4ae
-# ╟─4f57dad5-ff3e-4c80-b2ed-6f24ee74eb23
-# ╟─9eda1a58-c7f7-42cf-821a-972c231294da
-# ╟─e40ab538-4be4-4ba7-baf2-a1e63865cdf3
-# ╟─4b06d302-a324-411a-a245-b15d22fab706
-# ╟─6e8b7445-c52b-4ff6-8459-503fe59d47f7
-# ╟─f989c223-4f4b-470b-9f22-b10338297235
-# ╟─cb19dbd5-4841-4747-b211-f253c5359223
-# ╟─c9d82ed5-6017-4bed-b327-09dc7a5c9905
-# ╟─81b37317-5089-4f6c-a494-af5210bbcb1c
-# ╟─455723ad-c29e-418b-b21e-31a51eb70f0b
-# ╟─1f509dcc-4396-436d-931a-bbe35e34185b
-# ╟─fa571e4b-7f44-4a35-9a56-7b28add60349
-# ╠═c862dcff-7bd2-440b-8973-13259c48e6ce
-# ╟─9add3a5f-cfb5-440e-a51a-16d3729c0bb0
-# ╠═5fdf808c-0481-4df4-afb7-eccfa935e9e9
-# ╠═a3ef43c8-e22c-4648-95fe-900fd69fe305
-# ╟─82cc14f2-bbe0-4aec-abbf-a349c9971768
-# ╟─b4dd25df-0918-4d36-b4e1-57a2b072b28a
-# ╠═6d36abc0-0df8-48d4-95b6-e771e80b5004
-# ╠═213244c3-1e6a-46cc-b766-954f178b2a79
-# ╟─b1d22775-9282-46d2-875e-47cf907b456a
-# ╠═ad04582d-5490-4ae8-a8e6-f6ef07cb7d02
-# ╟─c3ec4203-7783-426f-8d5e-b5227d66166c
-# ╠═b29f31cb-cb76-4f73-8b9a-4ec3bbac5031
-# ╠═74f763fa-bf91-43c1-b0ea-f09349a139be
-# ╟─ddbdb3b4-69c8-4bce-810d-f1791bb7a87a
-# ╟─9c11d820-4c4a-4d30-bbb7-11dda1d0b1ae
-# ╟─383c6327-c982-420f-8bc6-24869774c1b7
-# ╟─349b2b41-5900-41ed-ba39-78b6a2274c3e
-# ╟─736fe7c6-85e3-4e6b-9212-53d520863e31
-# ╠═563c5e67-ef8d-40cf-9dc1-52375a330645
-# ╟─49b1aa14-07d1-40e0-8278-4d4613cb2ce8
-# ╟─fc8ee68f-4157-48bd-b287-ad7f4fae1841
-# ╟─4d10503d-7e4f-4cf8-84a5-5dd2e98a58d8
-# ╟─877d5a4d-ef2b-4329-a810-7bc6e158cfb3
-# ╟─42a20eab-c3e0-41c2-86ff-59cc1c6ff168
+# ╟─5e969372-0895-11ef-2b0c-4151966b7474
+# ╟─2576fd79-99df-4393-b7b1-f0a1df8762f2
+# ╠═9345ee30-cec3-443a-aae6-7ca1d26db7c1
+# ╟─2178e8c6-c0d5-4c1f-95c7-8c42397aff85
+# ╟─39e6db21-96ab-4f66-85ed-ce99b1dd75b0
+# ╠═68c493bd-850c-4bed-b1d0-9e6ef4fd1927
+# ╟─1d8b5344-d1d0-48c6-8622-5b3485f91cb2
+# ╟─ebee54d6-3426-4d16-8f9f-4e092b4d276e
+# ╠═bc4f7d8e-bfd9-4282-8e6e-c82ecc2bf94e
+# ╠═dff8956e-71de-4234-a5af-b1110ebf6c43
+# ╠═8ae61305-d726-455d-a558-bd1a9e2aaa48
+# ╟─743b5be6-8a97-446c-b7e4-1dfedafedf6b
+# ╠═33d8f2c2-327a-4b56-a89c-8d8c0acaca6a
+# ╠═24d71671-b2c4-4e4b-a61c-02aa3018a00f
+# ╟─7e572c12-f070-47a4-b038-d9f2b1fa60fc
+# ╠═3629604b-2524-4329-be71-30f333cd7eb9
+# ╟─1b4374f5-b45b-40ce-b912-954af50b41d5
+# ╠═2dd6b00d-e372-4272-a007-b560c3e17260
+# ╠═31a64930-f583-4b14-a73b-cca1eab7902b
+# ╟─0e1e531d-3d93-4718-887f-ab0ca56fd5fe
+# ╟─0492d068-d54f-4159-9ca8-173c99c29ab9
+# ╟─7c4821e1-029a-4038-b767-d87bf0c91703
+# ╟─1cf90826-24b2-4b72-9b4b-f11e66108340
+# ╠═5754802e-fe5e-42bc-b7b3-fff51f0ec116
+# ╟─b44be252-371a-400f-b02a-a7caad856376
+# ╠═9f432ff2-9a0e-4b1e-b036-18ec4da89d9e
+# ╟─a62a4e71-cc62-4df5-bf85-ec76676a6b48
+# ╟─20dcc0db-10fa-44a4-8841-ce4f030d6cae
+# ╟─e23a9860-a622-45ba-8015-fcffbb9cb3f5
+# ╠═202aa704-25bc-4cfc-91d8-c4bd8a55080a
+# ╠═ef3f5f96-5349-4638-9526-fd2d76790be9
+# ╠═ca642413-4988-4d82-95ba-603f3781f932
+# ╠═ab6ea1bd-8b59-47b6-a257-732f8c1052a6
+# ╠═93df1e25-e2f1-463a-b9c7-e5ae068d4349
+# ╠═855162f4-2dbd-433c-8353-c6651f3e0053
+# ╠═fe9636bc-7f0f-44b6-b735-a113868ee8a5
+# ╠═4f85f23b-3ddf-4a53-a91a-37fa047f49bd
+# ╟─42f647c1-964e-4314-998b-f63128f81b5d
+# ╠═27ebde57-076d-47c6-9ec6-6caa7f88f896
+# ╠═30f1d558-c7ae-40e3-b25d-b2be69ab7a66
+# ╠═927898df-3099-4117-9f60-549241d18f45
+# ╟─5b978120-a9d1-4f5c-9681-d6ff6fc0ac5a
+# ╟─8bd45e41-9231-4040-9146-9692c54419a4
+# ╠═7e1fb080-81dc-44b5-be9b-bcd3b87a2b29
+# ╟─14761e01-0875-4d22-baa9-73aac0f05758
+# ╟─35945030-df64-4d44-ac6e-91cb38d34f3c
+# ╟─71c0e0da-1d62-44be-8a64-4d30e7d7bb65
+# ╠═4480a003-4fb2-4591-baba-fdb86232dfb6
+# ╟─993e440b-b4d3-4970-a852-3d1bceda1502
+# ╠═d2b85c7b-a1cb-46f8-b48c-21c2594fd4f3
+# ╠═4da69748-493c-4b78-a23f-fa1602b1a4a9
+# ╠═69c4dbfb-2eb3-4382-bc05-0eae137fb5bc
+# ╟─379920b9-4920-431f-95cf-7c8913c95c74
+# ╠═d4640b39-f6f8-41b9-aca4-cc89315e576f
+# ╠═d3f06739-497f-45c7-a9e0-7245dba69441
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
