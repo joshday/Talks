@@ -31,6 +31,29 @@ using StatsModels
 # ╔═╡ f15a7851-48bf-4f3c-8b6c-096a46b44ce2
 using GLM
 
+# ╔═╡ 70f472e2-3cc1-433a-8b2d-5d627e19b7c7
+using Clustering, Random
+
+# ╔═╡ d3930a16-238c-4892-853a-01c7ff4ce6a0
+using OnlineStats, LinearAlgebra
+
+# ╔═╡ 83888ff7-d5fc-4c60-92b1-13e64e89d1d5
+md"""
+# Modeling
+
+!!! note "Statistical Modeling is Not (Always) Julia's Strength"
+	...unless you are developing algorithms yourself.
+
+	- This is unfortunate, but some of the champions of the statistics ecosystem from the early days of Julia are now busy with other things.  
+	- This sometimes happens in open source software development.
+"""
+
+# ╔═╡ ee38c824-c6d1-4d47-8a1f-f2f78ace703d
+md"""
+!!! aside "The Good and the Bad"
+	In this notebook we'll discuss the good parts and the hard parts of doing statistical modeling in Julia.
+"""
+
 # ╔═╡ 95acbdbd-6c19-486d-94e9-28953fe665d5
 md"""
 # Generalized Linear Models
@@ -143,7 +166,7 @@ md"""
 """
 
 # ╔═╡ cebbb799-229a-405c-a9f2-7dbcdd7a4079
-begin 
+model1 = let 
 	β = [1, 2]
 	x = randn(100, 2)
 	y = x * β + randn(100)
@@ -154,7 +177,7 @@ begin
 	# Or a formula with a DataFrame
 	temp_df = DataFrame(x1=x[:, 1], x2=x[:, 2], y=y)
 	
-	model1 = lm(@formula(y ~ 0 + x1 + x2), temp_df)
+	lm(@formula(y ~ 0 + x1 + x2), temp_df)
 end
 
 # ╔═╡ 97011870-35ca-42c9-8bac-5ff9c8786062
@@ -180,10 +203,17 @@ confint(model1)
 # ╔═╡ ee0a53c1-1bfb-44c2-a4e0-ac45a03e340b
 loglikelihood(model1)
 
+# ╔═╡ 0477420f-b37a-4b6f-b060-175ed9a7e352
+
+
 # ╔═╡ d1f6f634-6150-47da-8915-c5c9252b0379
 md"""
-!!! note
-	Julia has less 
+!!! aside "The Good"
+	- The API is intuitive and follows mostly from R.  
+
+!!! warning "The Bad"
+	- Julia/**StatsPlots** doesn't have built-in plot recipes (I'm not sure why) for **GLM** models.  
+	- They are straightforward to create yourself, but it is some extra friction.
 """
 
 # ╔═╡ 12cea0ec-035b-4033-93ac-3954d1bff798
@@ -209,11 +239,11 @@ glm(formula, df, family, link)
 # ╔═╡ 805cb0d3-3e89-4cd4-8a4a-3bdbc20515fe
 model2 = let 
 	# Response values needs to be in the support of the distribution family
-	temp = transform(df, :sex => ByRow(x -> x == "MALE") => "m1")
+	temp_df = transform(df, :sex => ByRow(x -> x == "MALE") => "m1")
 
 	f = @formula(m1 ~ 1 + species * body_mass_g)
 
-	glm(f, temp, Bernoulli(), LogitLink())
+	glm(f, temp_df, Binomial())
 end
 
 # ╔═╡ a488b2e6-2660-463e-8f89-c8017f56ca55
@@ -222,21 +252,30 @@ fitted(model2)
 # ╔═╡ 34614f4b-1743-405b-a91e-4518ab7eebea
 coef(model2)
 
+# ╔═╡ a991f997-5234-4d76-abf7-b5d150b4bdb1
+md"""
+!!! aside "The Good"
+	Again, this is easy to follow and a straightforward conversion from R.
+
+!!! warning "The Bad"
+	If you don't have the right type signature to the `glm` method, e.g. your response variable contains Strings `"MALE"` and `"FEMALE"` instead of 0s and 1s, error messages are hard to understand.
+"""
+
 # ╔═╡ 1988d46a-b625-45c8-b581-3a5c0ff3d851
 md"""
 # Bayesian Statistics
 
-
-- Great resource [here](https://storopoli.io/Bayesian-Julia/).
+!!! aside "Where Julia Shines"
+	Bayesian inference, specifically samplers (Gibbs, Metropolis-Hastings, etc.), are an area where Julia excels.
 """
 
 # ╔═╡ d59726e9-e1d7-4108-8e35-c53fbdd7d357
 md"""
-## The Hard Way
+## The Manual/One-Off Way
 
-!!! note "Implementing it Yourself"
-	- This example demonstrates why Julia is a great language for Bayesian statistics.  
-	- It comes from a [2013 talk by Doug Bates: "Julia for R Programmers"](https://pages.stat.wisc.edu/~bates/JuliaForRProgrammers.pdf)
+!!! note "Hand-Rolled Gibbs Sampler Example from Doug Bates"
+	- This example comes from a [2013 talk by Doug Bates: "Julia for R Programmers"](https://pages.stat.wisc.edu/~bates/JuliaForRProgrammers.pdf)
+	- I have somewhat of a personal history with this example since this is what got my PhD advisor interested in Julia, who in turn advised me to start working in Julia.
 """
 
 # ╔═╡ 053e7c27-912e-4487-a271-23d842880b1a
@@ -255,6 +294,8 @@ md"""
 	  X | Y &\sim& \Gamma \left( 3, \frac{1}{y^2 + 4} \right) \\
 	  Y | X &\sim& N \left(\frac{1}{1+x}, \frac{1}{2(1+x)} \right).
 	\end{eqnarray*}$
+
+	We'll compare the *naive* solutions (what the average coder would write before optimizing their code) in R vs. Julia.
 """
 
 # ╔═╡ 46029c8b-3004-4f8c-8a3f-3b497bf54118
@@ -280,6 +321,11 @@ rgibbs <- function(N, thin) {
 }
 """;
 
+# ╔═╡ 94190178-d7f5-416c-b4c0-296da1b256af
+md"""
+!!! aside "R takes > 14 seconds"
+"""
+
 # ╔═╡ 86315f2b-9365-4a8e-b2c5-cbd4d005f8d0
 rgibbs_result = R"""
 system.time(rgibbs(10000, 500))
@@ -288,8 +334,6 @@ system.time(rgibbs(10000, 500))
 # ╔═╡ 7436c067-f1a4-4cee-9ff4-3cc17ce48831
 md"""
 ### Julia Solution
-
-- Almost line-for-line equivalent to R solution.
 """
 
 # ╔═╡ cc8e593c-b725-4481-b86c-a405bc611a48
@@ -307,6 +351,11 @@ function jgibbs(N, thin)
     mat
 end
 
+# ╔═╡ a1a90daf-5330-461d-867a-7875c162257e
+md"""
+!!! aside "Julia takes < 0.2 seconds"
+"""
+
 # ╔═╡ 13a6358a-c8d1-4416-88ce-cca1952438d4
 jtime = @elapsed jgibbs(10000, 500)
 
@@ -316,7 +365,7 @@ let
 	speedup = rtime / jtime
 	
 	Markdown.parse("""
-	!!! note "Similar Coding Effort"
+	!!! aside "Similar Coding Effort (almost the same line-for-line)"
 		But...Julia is $(round(speedup, digits=2)) times faster.
 	""")
 end
@@ -327,43 +376,136 @@ md"""
 
 **Turing** is an ecosystem of Julia packages for Bayesian Inference using *probabilistic programming*.
 
-!!! note "Bayesian Linear Regression"
-	- I think it's best to see what probabilistic programming is in action.
-	- [This](https://storopoli.io/Bayesian-Julia/pages/06_linear_reg/) is a great resource.
+!!! aside "It's Very Good"
+	- **Turing** is a shining example in the Julia statistics ecosystem.
+	- Exactly what I like to see: Code that looks like math, but it's super fast.
+
+!!! note "Great Documentation"
+	- **Turing's** documentation and tutorials are a part of its strengths.  Rather than copy the examples into this notebook, we'll take a look at [the tutorials](https://turinglang.org/docs/tutorials/00-introduction/).
 """
 
 # ╔═╡ 3d054039-e601-43cd-b04f-6548734a34be
 md"""
 # Machine Learning with MLJ
 
-- There are many different packages the implement a handful of machine learning algorithms.
-- The [MLJ](https://github.com/JuliaAI/MLJ.jl) framework brings many algoritms from various packages under a consistent interface.  
-- It's essentially the Julia version of Python's Sci-kit Learn of R's mlr.
+**MLJ** is a large framework for machine learning.  It brings the models from many packages under a consistent interface
 
-!!! note "Personal Opinion"
-	MLJ feels overengineered in places (like having their own tabular data format that isn't a DataFrame), but it's a very powerful framework.
+!!! aside "Another Good One"
+	- MLJ is big and has a steep learning curve, but it's very powerful.
+	- Similar to **Turing**, documentation and tutorials are fantastic.
+
+!!! note "A Primer"
+	Again, rather than copy-paste examples into this notebook, we'll [visit the docs](https://juliaai.github.io/MLJ.jl/stable/getting_started/).
+"""
+
+# ╔═╡ a0b8d3ec-1f2b-42be-ae64-0a3eb5c0761d
+md"""
+# Clustering
+
+- [Clustering.jl](https://github.com/JuliaStats/Clustering.jl)
+
+
+!!! note "Many Algorithms Available"
+	Here we'll do a quick example of KMeans.
+"""
+
+# ╔═╡ e3da6ced-8a91-450e-8a04-a9392d0dd9a8
+begin
+	# Simulate data with 2 centers (0,0) and (2,2)
+	km_x = Float64[]
+	km_y = Float64[]
+	for i in 1:1000
+		if rand() < .5
+			push!(km_x, randn())
+			push!(km_y, randn())
+		else
+			push!(km_x, 2 + randn())
+			push!(km_y, 2 + randn())
+		end
+	end
+	km_data = hcat(km_x, km_y)'
+
+	# observations in columns, not rows
+	km = kmeans(km_data, 2)
+end
+
+# ╔═╡ eeea0121-88ac-4f6e-ad71-f27851bf5426
+begin
+	scatter(km_x, km_y, group=km.assignments, legendtitle="Assignment")
+	scatter!(km.centers[1,:], km.centers[2,:], lab="Center", ms=20)
+end
+
+# ╔═╡ f015f4dc-6219-4fe5-b1eb-e67771e7b695
+md"""
+# OnlineStats
+
+**OnlineStats** implement single-pass algorithms for statistics and modeling.
+
+!!! note "Big Data"
+	Since OnlineStats doesn't need to revisit data, it's a good choice for big datasets (e.g. iterating through a larger-than-RAM CSV).
+
+!!! aside "Niche Use Case"
+	- It's a niche library and doesn't always create the fastest calculation of a statistic or model.  
+	- But...it sometimes makes calculations possible that otherwise wouldn't be possible by an offline algorithm.
+"""
+
+# ╔═╡ 075e649f-5973-4a86-911b-6215decf9485
+md"""
+### Quickstart
+"""
+
+# ╔═╡ 54e202c8-1072-4c1d-a8be-6e01b70bce3f
+let
+	# Each statistic/model is its own type
+	lr = LinReg()
+
+	# Stats can be updated with more data
+	for _ in 1:1000
+		# generate data
+		x = randn(5)
+		y = dot(x, 1:5) + randn()
+
+		# update the regression
+		fit!(lr, (x, y))
+	end
+
+	# Many Stats have Plot Recipes
+	bar(lr, title="LinReg coefficients")
+end
+
+# ╔═╡ 82e55fef-4e68-44f3-b2ba-e563ac429c14
+md"""
+### Wide Library of Statistics, Models, and DataVisualizations
+
+- [Let's check out the docs](https://joshday.github.io/OnlineStats.jl/latest/)
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+Clustering = "aaaa29a8-35af-508c-8bc3-b662a17a0fe5"
 Cobweb = "ec354790-cf28-43e8-bb59-b484409b7bad"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+OnlineStats = "a15396b6-48d5-5d58-9928-6d29437db91e"
 PlotlyLight = "ca7969ec-10b3-423e-8d99-40f33abb42bf"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 RCall = "6f49c342-dc21-5d91-9882-a32aef131414"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 StatsModels = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
 
 [compat]
 CSV = "~0.10.14"
+Clustering = "~0.15.7"
 Cobweb = "~0.6.1"
 DataFrames = "~1.6.1"
 Distributions = "~0.25.109"
 GLM = "~1.9.0"
+OnlineStats = "~1.7.0"
 PlotlyLight = "~0.9.1"
 Plots = "~1.40.4"
 PlutoUI = "~0.7.59"
@@ -377,13 +519,18 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.3"
 manifest_format = "2.0"
-project_hash = "6a4afd0cff1465c5b681fbb2a2fc71241f326fd6"
+project_hash = "2663b0a8274e1d347b3bcc89b154d255a8e3d988"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
 git-tree-sha1 = "6e1d2a35f2f90a4bc7c2ed98079b2ba09c35b83a"
 uuid = "6e696c72-6542-2067-7265-42206c756150"
 version = "1.3.2"
+
+[[deps.AbstractTrees]]
+git-tree-sha1 = "2d9c9a55f9c93e8887ad391fbae72f8ef55e1177"
+uuid = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
+version = "0.4.5"
 
 [[deps.AliasTables]]
 deps = ["PtrArrays", "Random"]
@@ -442,6 +589,12 @@ weakdeps = ["JSON", "RecipesBase", "SentinelArrays", "StructTypes"]
     CategoricalArraysRecipesBaseExt = "RecipesBase"
     CategoricalArraysSentinelArraysExt = "SentinelArrays"
     CategoricalArraysStructTypesExt = "StructTypes"
+
+[[deps.Clustering]]
+deps = ["Distances", "LinearAlgebra", "NearestNeighbors", "Printf", "Random", "SparseArrays", "Statistics", "StatsBase"]
+git-tree-sha1 = "9ebb045901e9bbf58767a9f34ff89831ed711aae"
+uuid = "aaaa29a8-35af-508c-8bc3-b662a17a0fe5"
+version = "0.15.7"
 
 [[deps.Cobweb]]
 deps = ["DefaultApplication", "OrderedCollections", "Scratch"]
@@ -557,6 +710,20 @@ deps = ["Mmap"]
 git-tree-sha1 = "9e2f36d3c96a820c678f2f1f1782582fcf685bae"
 uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 version = "1.9.1"
+
+[[deps.Distances]]
+deps = ["LinearAlgebra", "Statistics", "StatsAPI"]
+git-tree-sha1 = "66c4c81f259586e8f002eacebc177e1fb06363b0"
+uuid = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
+version = "0.10.11"
+
+    [deps.Distances.extensions]
+    DistancesChainRulesCoreExt = "ChainRulesCore"
+    DistancesSparseArraysExt = "SparseArrays"
+
+    [deps.Distances.weakdeps]
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+    SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[deps.Distributions]]
 deps = ["AliasTables", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns"]
@@ -1022,6 +1189,12 @@ git-tree-sha1 = "0877504529a3e5c3343c6f8b4c0381e57e4387e4"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 version = "1.0.2"
 
+[[deps.NearestNeighbors]]
+deps = ["Distances", "StaticArrays"]
+git-tree-sha1 = "ded64ff6d4fdd1cb68dfcbb818c69e144a5b2e4c"
+uuid = "b8a86587-4115-5ab1-83bc-aa920d37bbce"
+version = "0.4.16"
+
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 version = "1.2.0"
@@ -1031,6 +1204,18 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "887579a3eb005446d514ab7aeac5d1d027658b8f"
 uuid = "e7412a2a-1a6e-54c0-be00-318e2571c051"
 version = "1.3.5+1"
+
+[[deps.OnlineStats]]
+deps = ["AbstractTrees", "Dates", "Distributions", "LinearAlgebra", "OnlineStatsBase", "OrderedCollections", "Random", "RecipesBase", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns"]
+git-tree-sha1 = "29f0e2b369c22190f2500b4fe5af49052c3f0c3b"
+uuid = "a15396b6-48d5-5d58-9928-6d29437db91e"
+version = "1.7.0"
+
+[[deps.OnlineStatsBase]]
+deps = ["AbstractTrees", "Dates", "LinearAlgebra", "OrderedCollections", "Statistics", "StatsBase"]
+git-tree-sha1 = "9a067a4ea67d1ebab4554b73792dd429f098387c"
+uuid = "925886fa-5bf2-5e8e-b522-a9147a512338"
+version = "1.7.0"
 
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
@@ -1308,6 +1493,25 @@ version = "2.4.0"
 
     [deps.SpecialFunctions.weakdeps]
     ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+
+[[deps.StaticArrays]]
+deps = ["LinearAlgebra", "PrecompileTools", "Random", "StaticArraysCore"]
+git-tree-sha1 = "9ae599cd7529cfce7fea36cf00a62cfc56f0f37c"
+uuid = "90137ffa-7385-5640-81b9-e52037218182"
+version = "1.9.4"
+
+    [deps.StaticArrays.extensions]
+    StaticArraysChainRulesCoreExt = "ChainRulesCore"
+    StaticArraysStatisticsExt = "Statistics"
+
+    [deps.StaticArrays.weakdeps]
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+    Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+
+[[deps.StaticArraysCore]]
+git-tree-sha1 = "36b3d696ce6366023a0ea192b4cd442268995a0d"
+uuid = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
+version = "1.4.2"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -1770,6 +1974,8 @@ version = "1.4.1+1"
 
 # ╔═╡ Cell order:
 # ╟─f53dfc3e-21e3-11ef-1a3f-03b8bf2a1711
+# ╟─83888ff7-d5fc-4c60-92b1-13e64e89d1d5
+# ╟─ee38c824-c6d1-4d47-8a1f-f2f78ace703d
 # ╟─95acbdbd-6c19-486d-94e9-28953fe665d5
 # ╟─04d0ff60-f0f7-4b48-9a2b-242e76a0b2e7
 # ╟─9b069810-320e-45ee-9e46-507582d3eab9
@@ -1784,7 +1990,7 @@ version = "1.4.1+1"
 # ╠═0c053542-8e6f-4135-992e-abac32be47c3
 # ╟─6d9891c2-b78c-4c17-b47c-1dd70c45df94
 # ╠═f15a7851-48bf-4f3c-8b6c-096a46b44ce2
-# ╠═cebbb799-229a-405c-a9f2-7dbcdd7a4079
+# ╟─cebbb799-229a-405c-a9f2-7dbcdd7a4079
 # ╟─97011870-35ca-42c9-8bac-5ff9c8786062
 # ╠═5a02371c-6401-4a11-aa2e-111679b5f5c2
 # ╠═c9da90d1-d32c-4c0c-809f-0d58f8ed1f3f
@@ -1792,23 +1998,36 @@ version = "1.4.1+1"
 # ╠═a4ccf8b0-88e7-4bfc-b226-6861de84e47b
 # ╠═d56ecaad-3b8d-494e-a55d-85f1c99c724f
 # ╠═ee0a53c1-1bfb-44c2-a4e0-ac45a03e340b
-# ╠═d1f6f634-6150-47da-8915-c5c9252b0379
+# ╠═0477420f-b37a-4b6f-b060-175ed9a7e352
+# ╟─d1f6f634-6150-47da-8915-c5c9252b0379
 # ╠═12cea0ec-035b-4033-93ac-3954d1bff798
 # ╟─47a4463e-1b93-44ba-956e-e0220c3db671
 # ╠═805cb0d3-3e89-4cd4-8a4a-3bdbc20515fe
 # ╠═a488b2e6-2660-463e-8f89-c8017f56ca55
 # ╠═34614f4b-1743-405b-a91e-4518ab7eebea
+# ╟─a991f997-5234-4d76-abf7-b5d150b4bdb1
 # ╟─1988d46a-b625-45c8-b581-3a5c0ff3d851
 # ╟─d59726e9-e1d7-4108-8e35-c53fbdd7d357
 # ╟─053e7c27-912e-4487-a271-23d842880b1a
 # ╟─46029c8b-3004-4f8c-8a3f-3b497bf54118
 # ╠═b23b9e33-2902-4f9b-a287-e06f6db84125
+# ╟─94190178-d7f5-416c-b4c0-296da1b256af
 # ╠═86315f2b-9365-4a8e-b2c5-cbd4d005f8d0
 # ╟─7436c067-f1a4-4cee-9ff4-3cc17ce48831
 # ╠═cc8e593c-b725-4481-b86c-a405bc611a48
+# ╟─a1a90daf-5330-461d-867a-7875c162257e
 # ╠═13a6358a-c8d1-4416-88ce-cca1952438d4
 # ╠═404f77df-9004-44a0-8a36-50b2b1c88f6c
 # ╟─bab037bb-936a-400f-85b4-e0d6c515d8fe
 # ╟─3d054039-e601-43cd-b04f-6548734a34be
+# ╟─a0b8d3ec-1f2b-42be-ae64-0a3eb5c0761d
+# ╠═70f472e2-3cc1-433a-8b2d-5d627e19b7c7
+# ╠═e3da6ced-8a91-450e-8a04-a9392d0dd9a8
+# ╠═eeea0121-88ac-4f6e-ad71-f27851bf5426
+# ╟─f015f4dc-6219-4fe5-b1eb-e67771e7b695
+# ╟─075e649f-5973-4a86-911b-6215decf9485
+# ╠═d3930a16-238c-4892-853a-01c7ff4ce6a0
+# ╟─54e202c8-1072-4c1d-a8be-6e01b70bce3f
+# ╟─82e55fef-4e68-44f3-b2ba-e563ac429c14
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
