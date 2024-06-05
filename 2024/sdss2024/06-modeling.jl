@@ -150,6 +150,8 @@ let
 	subset = select(df, Not(:species))
 
 	rhs = Tuple(term.(names(subset)))
+	
+	rhs = (term(1), rhs...)
 
 	FormulaTerm(lhs, rhs)
 end
@@ -203,9 +205,6 @@ confint(model1)
 # ╔═╡ ee0a53c1-1bfb-44c2-a4e0-ac45a03e340b
 loglikelihood(model1)
 
-# ╔═╡ 0477420f-b37a-4b6f-b060-175ed9a7e352
-
-
 # ╔═╡ d1f6f634-6150-47da-8915-c5c9252b0379
 md"""
 !!! aside "The Good"
@@ -243,7 +242,7 @@ model2 = let
 
 	f = @formula(m1 ~ 1 + species * body_mass_g)
 
-	glm(f, temp_df, Binomial())
+	glm(f, temp_df, Bernoulli())
 end
 
 # ╔═╡ a488b2e6-2660-463e-8f89-c8017f56ca55
@@ -1990,7 +1989,7 @@ version = "1.4.1+1"
 # ╠═0c053542-8e6f-4135-992e-abac32be47c3
 # ╟─6d9891c2-b78c-4c17-b47c-1dd70c45df94
 # ╠═f15a7851-48bf-4f3c-8b6c-096a46b44ce2
-# ╟─cebbb799-229a-405c-a9f2-7dbcdd7a4079
+# ╠═cebbb799-229a-405c-a9f2-7dbcdd7a4079
 # ╟─97011870-35ca-42c9-8bac-5ff9c8786062
 # ╠═5a02371c-6401-4a11-aa2e-111679b5f5c2
 # ╠═c9da90d1-d32c-4c0c-809f-0d58f8ed1f3f
@@ -1998,7 +1997,6 @@ version = "1.4.1+1"
 # ╠═a4ccf8b0-88e7-4bfc-b226-6861de84e47b
 # ╠═d56ecaad-3b8d-494e-a55d-85f1c99c724f
 # ╠═ee0a53c1-1bfb-44c2-a4e0-ac45a03e340b
-# ╠═0477420f-b37a-4b6f-b060-175ed9a7e352
 # ╟─d1f6f634-6150-47da-8915-c5c9252b0379
 # ╠═12cea0ec-035b-4033-93ac-3954d1bff798
 # ╟─47a4463e-1b93-44ba-956e-e0220c3db671
@@ -2027,7 +2025,7 @@ version = "1.4.1+1"
 # ╟─f015f4dc-6219-4fe5-b1eb-e67771e7b695
 # ╟─075e649f-5973-4a86-911b-6215decf9485
 # ╠═d3930a16-238c-4892-853a-01c7ff4ce6a0
-# ╟─54e202c8-1072-4c1d-a8be-6e01b70bce3f
+# ╠═54e202c8-1072-4c1d-a8be-6e01b70bce3f
 # ╟─82e55fef-4e68-44f3-b2ba-e563ac429c14
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

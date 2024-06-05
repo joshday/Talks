@@ -173,7 +173,7 @@ Pluto is a *reactive* notebook environment that offers:
 md"## Reactivity/Interactivity:"
 
 # ╔═╡ 15d0df82-9436-497a-84e6-450db2a18bf1
-x = 15  # Change this value...
+x = 7  # Change this value...
 
 # ╔═╡ d17dd821-d99c-422f-a693-54199a2ddc2b
 x + 10  # ...and this updates automatically
@@ -228,15 +228,6 @@ md"""## No Hidden State
 
 # ╔═╡ 9bb0d697-2575-4840-ac5d-096eed487f34
 md"### Multiple Definitions of Same Variable"
-
-# ╔═╡ 5342fac8-464e-4724-950f-fff9f3156cc7
-var = 1
-
-# ╔═╡ 190356c3-ea1a-4da6-b878-3dd284ef9c3b
-# ╠═╡ disabled = true
-#=╠═╡
-var = 2
-  ╠═╡ =#
 
 # ╔═╡ 4ca2d008-644b-48d9-a3ff-b518babb590f
 md"""
@@ -426,6 +417,21 @@ Note that in 2023, 78% of Julia User & Developer Survey respondents said they us
 
 	There is a lot of functionality here.  See the link above or search for "Julia" in the command palette.
 """
+
+# ╔═╡ fee229fc-bf9a-4e66-806f-a199dcaa7456
+a = 1
+
+# ╔═╡ e0f2aa24-d834-4944-b845-939d6b304e32
+a + 15
+
+# ╔═╡ 5342fac8-464e-4724-950f-fff9f3156cc7
+# ╠═╡ disabled = true
+#=╠═╡
+var = 1
+  ╠═╡ =#
+
+# ╔═╡ 190356c3-ea1a-4da6-b878-3dd284ef9c3b
+var = 2
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -774,8 +780,8 @@ version = "17.4.0+2"
 # ╟─ca436b1c-b43a-4386-8b35-50535dcd9fa8
 # ╟─a25dcfc4-66b0-4f88-8a4b-8ad1f2ada920
 # ╟─7fb6df93-8c53-433c-895c-010e2ad23fef
-# ╠═15d0df82-9436-497a-84e6-450db2a18bf1
 # ╠═d17dd821-d99c-422f-a693-54199a2ddc2b
+# ╠═15d0df82-9436-497a-84e6-450db2a18bf1
 # ╟─e1905587-ec4f-457b-902b-421ad9194fb6
 # ╠═2b828b66-fa42-4ca7-b8ea-de4d83c6ede1
 # ╠═bacdcea9-1d26-448b-9ffa-9040aa0eff04
@@ -806,5 +812,7 @@ version = "17.4.0+2"
 # ╟─482a2ebb-1ef3-4b01-8ffc-44d974f91eae
 # ╟─afd6eaeb-ca9d-45a6-8578-18e676ddcfb8
 # ╟─28871cd5-21be-4c5b-83fc-a6f11cf5e215
+# ╠═e0f2aa24-d834-4944-b845-939d6b304e32
+# ╠═fee229fc-bf9a-4e66-806f-a199dcaa7456
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

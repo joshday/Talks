@@ -197,7 +197,7 @@ macro ggplot2(ex)
 	s2 = "ggsave(\"$file\", height=4)"  # Save the plot to the file
 	esc(quote
 		let 
-			@R_str $s
+			@R_str $s  # Equivalent to R"..."
 			@R_str $s2
 			LocalResource($file)  # Display as Pluto.LocalResource(file)
 		end
@@ -309,6 +309,7 @@ let
 	dist = MixtureModel([Normal(0,1), Gamma(2,4)], [.7, .3])
 
 	plot(x -> pdf(dist,x), -5, 40, linewidth=3, lab="Mixture")
+	
 	plot!(dist, lab=["Component 1" "Component 2"], ls=:dash)
 end
 
@@ -356,7 +357,7 @@ function simulate_ttest(nobs, nsims, σ = 1)
 end
 
 # ╔═╡ d3f06739-497f-45c7-a9e0-7245dba69441
-simulate_ttest(3, 10^6, .1)  # This should be ~0.5
+simulate_ttest(300, 10^6, 100)  # This should be ~0.05
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2100,7 +2101,7 @@ version = "1.4.1+1"
 # ╟─8bd45e41-9231-4040-9146-9692c54419a4
 # ╠═7e1fb080-81dc-44b5-be9b-bcd3b87a2b29
 # ╟─14761e01-0875-4d22-baa9-73aac0f05758
-# ╟─35945030-df64-4d44-ac6e-91cb38d34f3c
+# ╠═35945030-df64-4d44-ac6e-91cb38d34f3c
 # ╟─71c0e0da-1d62-44be-8a64-4d30e7d7bb65
 # ╠═4480a003-4fb2-4591-baba-fdb86232dfb6
 # ╟─993e440b-b4d3-4970-a852-3d1bceda1502

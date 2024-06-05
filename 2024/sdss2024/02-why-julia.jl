@@ -580,7 +580,7 @@ nt = (x=1, y=2, property_with_a_really_long_name=3)
 
 # ╔═╡ ef1aa424-bee9-4254-91b1-cf30b2d2615b
 # Type this below: nt.p <TAB>
-
+nt.property_with_a_really_long_name
 
 # ╔═╡ 8a13f30a-5d44-4565-bd16-3c030f7ac45e
 dict = Dict("one" => 1, "two" => 2)
@@ -595,7 +595,7 @@ dict = Dict("one" => 1, "two" => 2)
 
 # ╔═╡ c9a2da69-c872-4b0c-a1e1-4d6bf544195c
 # Type this below: \:smile: <TAB>
-
+😄 = 1
 
 # ╔═╡ 1da39bb0-241f-4498-aafd-3c8594e3cfae
 md"""
@@ -1277,7 +1277,7 @@ version = "17.4.0+2"
 # ╟─782eaf00-f0b0-4f9d-a77d-df38108d4952
 # ╟─fb4b17e9-0669-40d9-a53a-6538bb46b04e
 # ╟─f04dbab7-b08b-48c3-a0ea-559de323a800
-# ╠═909ca104-01ee-42b8-ba2f-350e4cf6ebaa
+# ╟─909ca104-01ee-42b8-ba2f-350e4cf6ebaa
 # ╠═23644f93-7b0a-476b-988b-6d559c50b03e
 # ╠═ef1aa424-bee9-4254-91b1-cf30b2d2615b
 # ╠═8a13f30a-5d44-4565-bd16-3c030f7ac45e

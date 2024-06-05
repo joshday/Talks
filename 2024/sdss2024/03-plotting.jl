@@ -331,7 +331,7 @@ md"""
 """
 
 # ╔═╡ 74f763fa-bf91-43c1-b0ea-f09349a139be
-plot(Normal())
+plot(Normal(), func=cdf)
 
 # ╔═╡ ddbdb3b4-69c8-4bce-810d-f1791bb7a87a
 md"""
