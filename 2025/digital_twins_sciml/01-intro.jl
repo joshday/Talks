@@ -57,6 +57,8 @@ using ColorSchemes
 md"""
 # Intro to Julia and SciML
 
+- This notebook is in the repo: [https://github.com/joshday/Talks](https://github.com/joshday/Talks)
+
 #### May 16, 2025
 
 #### Josh Day 
